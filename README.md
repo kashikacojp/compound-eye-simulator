@@ -1,12 +1,16 @@
 # Compound Eye Simulator (複眼シミュレータ)
+## Requrements
+- Python 3.11.*
 ## Usage
 ### Install Packages with Pipenv
+- Install Python **3.11.\***
+    - Requirement for [bpy](https://pypi.org/project/bpy/) package
 - Get Pipenv
- - Use pip: **python -m pip install pipenv**
- - Use apt(Ubuntu): **sudo apt install -y pipenv** 
- - Other method is ok
-- **pipenv install**
-### Run Python environment
-- **pipenv shell** -> start environment
-### Add other package in the environment
+    - pip: **python -m pip install pipenv**
+- Run **pipenv install**
+
+### Start Environment
+- **pipenv shell**
+
+### Add Packages 
 - **pipenv install [package-name]**
