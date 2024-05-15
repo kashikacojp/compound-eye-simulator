@@ -9,7 +9,7 @@ class ImageUtility:
     def convert_to_web_mercator(image):
         # 同じサイズの空の画像を作成
         height, width, channels = image.shape
-        output_image = np.zeros((width, width, channels), dtype=np.uint8)
+        output_image = np.zeros((width, width, channels), dtype=image.dtype)
 
         lon = (+0.9450125419978511*0.5) * np.pi# デフォルトだと赤道が0.5になるので, -0.5を引く
         # print(np.log(np.tan(lon/2+np.pi/4)))# -2.13
@@ -38,7 +38,7 @@ class ImageUtility:
         # 同じサイズの空の画像を作成
         height, width, channels = image.shape
         height = int(width/2)
-        output_image = np.zeros((height, width, channels), dtype=np.uint8)
+        output_image = np.zeros((height, width, channels), dtype=image.dtype)
 
         # 画素値をコピー
         for y in range(width):
@@ -65,7 +65,7 @@ class ImageUtility:
         height, width, channels = image.shape
         center_x,center_y = clip_center
         range_x ,range_y  = clip_range
-        clipped_image = np.zeros((range_y, range_x, channels), dtype=np.uint8)
+        clipped_image = np.zeros((range_y, range_x, channels), dtype=image.dtype)
         print("channels=",channels)
         for y in range(range_y):
             ry = int(y+height/2+center_y-range_y/2)

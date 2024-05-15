@@ -86,11 +86,14 @@ class SceneRenderer:
         node_save_depth = scene_node_tree.nodes.new('CompositorNodeOutputFile')
         node_save_depth.name = 'save_depth'
         node_save_depth.base_path =  self.output_depth_path
+        node_save_depth.format.file_format = "HDR" # default is "PNG"
+        node_save_depth.format.color_mode  = "RGB"  # default is "BW"
+        node_save_depth.format.color_depth = "32"
+        node_save_depth.format.compression = 0     # default is 15
 
         scene_node_tree.links.new(output_color,node_save_color.inputs[0])
         scene_node_tree.links.new(output_depth,node_norm_depth.inputs[0])
         scene_node_tree.links.new(node_norm_depth.outputs[0],node_save_depth.inputs[0])
-
 
         cycles_preferences = bpy.context.preferences.addons['cycles'].preferences
         # デバイスタイプをGPUに設定
@@ -102,6 +105,7 @@ class SceneRenderer:
 
             for device in cycles_preferences.devices:
                 if device.type == 'CUDA' and device.name == 'NVIDIA CUDA':
+                    print("FOUND: CUDA")
                     device.use = True
                     cycles_preferences.compute_device = device.name
                     cycles_preferences.compute_device_type = 'OPTIX'
