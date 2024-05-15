@@ -7,13 +7,13 @@ import os
 import cv2
 
 if __name__ == '__main__':
-    scene_filename = './../sample.blend'
+    scene_filename = './../Flower/flower_middle.blend'
     image_filename = './../kloofendal_43d_clear_puresky_4k.hdr'
     clip_range = (512,512)
     clip_center = (0,0)
-    # # bpyによるシーンの描画
-    # renderer = scene_renderer.SceneRenderer(scene_filename,image_filename)
-    # renderer.run()
+    # bpyによるシーンの描画
+    renderer = scene_renderer.SceneRenderer(scene_filename,image_filename)
+    renderer.run()
 
     if not os.path.exists('./../output_color_web_mercator'):
         os.mkdir('./../output_color_web_mercator')
@@ -39,15 +39,22 @@ if __name__ == '__main__':
     cv2.imwrite('./../output_color_web_mercator/image0001.png',color_web)
     cv2.imwrite('./../output_color_web_mercator_clipped/image0001.png',color_clipped_img)
     # 出力画像の読み込み
-    depth_img = cv2.imread("./../output_depth/image0001.hdr")
+    depth_img = cv2.imread("./../output_depth/image0001.hdr",cv2.IMREAD_UNCHANGED)
+    print(depth_img)
+    depth_img_saved = np.clip(depth_img * 255, 0, 255).astype(np.uint8)
+    cv2.imwrite('./../output_depth/image0001.png',depth_img_saved)
     depth_web = image_utility.ImageUtility.convert_to_web_mercator(depth_img)
+    cv2.imwrite('./../output_depth_web_mercator/image0001.hdr',depth_web)
+    depth_web_saved = np.clip(depth_img * 255, 0, 255).astype(np.uint8)
+    cv2.imwrite('./../output_depth_web_mercator/image0001.png',depth_web_saved)
     # WEBメルカトルへ変換
     depth_clipped_img = image_utility.ImageUtility.clip_with_bbox(depth_web,clip_center,clip_range)
-    cv2.imwrite('./../output_depth_web_mercator/image0001.hdr',depth_web)
     # クリッピング
     cv2.imwrite('./../output_depth_web_mercator_clipped/image0001.hdr',depth_clipped_img)
+    depth_clipped_img_saved = np.clip(depth_clipped_img * 255, 0, 255).astype(np.uint8)
+    cv2.imwrite('./../output_depth_web_mercator_clipped/image0001.png',depth_clipped_img_saved)
     # 離散格子の幅とサイズ
-    delta_size = 32
+    delta_size = 8
     # ガウシアンの処理(中心点ごとに異なるパラメータのブラーをかける→python上でfor文?)
     # 結構重いかも(pythonのまま→cython or C++ DLL)
     # numpyでfor文関数の実行をc++側に持っていけるようにしなければいけない
@@ -60,12 +67,14 @@ if __name__ == '__main__':
             index_image[y,x,0] = min(int(x*delta_size),width)
             index_image[y,x,1] = min(int(y*delta_size),height)
     gauss_image = gaussian_blur.GaussianBlur.apply_whole_blur2d_from_depth(color_clipped_img,depth_clipped_img,index_image)
+    debug_image = gaussian_blur.GaussianBlur.apply_whole_blur2d_from_depth(color_clipped_img,depth_clipped_img,index_image,True)
     # array.map(|x x*2|)
     # 処理を分解してnumpyのお作法に従うように変換するコスト(実装コスト)
     # →今日試せる？
     # 四角形へ変換する
     grid_img = grid_filter.GridFilter.apply_filter(gauss_image,delta_size,delta_size,0.1)
     cv2.imwrite('./../output/gauss_output.png',gauss_image) # OK
+    cv2.imwrite('./../output/debug_output.png',debug_image) # OK
     cv2.imwrite('./../output/final_output.png',grid_img) # OK
 
 

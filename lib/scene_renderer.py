@@ -50,6 +50,7 @@ class SceneRenderer:
         bpy.context.scene.cycles.device                     = 'GPU'
         bpy.context.scene.cycles.samples                    = 10
         bpy.context.scene.use_nodes = True
+        bpy.context.scene.view_layers["ViewLayer"].use_pass_z = True
         scene_node_tree = bpy.context.scene.node_tree
         # clear default nodes
         for node in scene_node_tree.nodes:

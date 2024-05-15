@@ -53,12 +53,12 @@ class GaussianBlur:
         return output_image
 
     @staticmethod
-    def apply_whole_blur2d_from_depth(color_image, depth_image, index_image = None):
+    def apply_whole_blur2d_from_depth(color_image, depth_image, index_image = None, vis_mode = False):
         pad =100
         filt_size1 = 1
-        filt_size2 = 3
-        filt_size3 = 5
-        filt_size4 = 7
+        filt_size2 = 5
+        filt_size3 = 9
+        filt_size4 = 13
         threshold1 = 0.25
         threshold2 = 0.50
         threshold3 = 0.75
@@ -67,6 +67,7 @@ class GaussianBlur:
         color_ker2 = GaussianBlur.generate_blur2d_kernel(filt_size2 , 3*filt_size2)
         color_ker3 = GaussianBlur.generate_blur2d_kernel(filt_size3 , 3*filt_size3)
         color_ker4 = GaussianBlur.generate_blur2d_kernel(filt_size4 , 3*filt_size4)
+
         if index_image is None:
             height, width,cha   = color_image.shape
             index_image = np.zeros(( height, width, 2), dtype=np.int32)
@@ -77,6 +78,7 @@ class GaussianBlur:
         
         depth_min = np.min(depth_image)# 5
         depth_max = np.max(depth_image)# 154
+        print(depth_min,depth_max)
         color_image_pad = np.pad(color_image,[(pad,pad),(pad,pad),(0,0)],'edge')
         _, _,channles   = color_image_pad.shape
         height, width,_ = index_image.shape
@@ -86,22 +88,25 @@ class GaussianBlur:
                 px = index_image[y,x,0]
                 py = index_image[y,x,1]
                 depth = (depth_image[py,px,0]-depth_min)/(depth_max-depth_min)
-                # if depth < threshold1:
-                #     output_image[y,x] = (255.0*threshold1,255.0*threshold1,255.0*threshold1)
-                # elif depth < threshold2:
-                #     output_image[y,x] = (255.0*threshold2,255.0*threshold2,255.0*threshold2)
-                # elif depth < threshold3:
-                #     output_image[y,x] = (255.0*threshold3,255.0*threshold3,255.0*threshold3)
-                # else:
-                #     output_image[y,x] = (255.0*threshold4,255.0*threshold4,255.0*threshold4)
-                if depth < threshold1:
-                    output_image[y,x] = GaussianBlur.apply_local_blur2d_kernel(color_image_pad,px+pad,py+pad,3*filt_size1,color_ker1)
-                elif depth < threshold2:
-                    output_image[y,x] = GaussianBlur.apply_local_blur2d_kernel(color_image_pad,px+pad,py+pad,3*filt_size2,color_ker2)
-                elif depth < threshold3:
-                    output_image[y,x] = GaussianBlur.apply_local_blur2d_kernel(color_image_pad,px+pad,py+pad,3*filt_size3,color_ker3)
+                if vis_mode:
+                    if depth < threshold1:
+                        output_image[y,x] = (255.0*threshold1,255.0*threshold1,255.0*threshold1)
+                    elif depth < threshold2:
+                        output_image[y,x] = (255.0*threshold2,255.0*threshold2,255.0*threshold2)
+                    elif depth < threshold3:
+                        output_image[y,x] = (255.0*threshold3,255.0*threshold3,255.0*threshold3)
+                    else:
+                        output_image[y,x] = (255.0*threshold4,255.0*threshold4,255.0*threshold4)
                 else:
-                    output_image[y,x] = GaussianBlur.apply_local_blur2d_kernel(color_image_pad,px+pad,py+pad,3*filt_size4,color_ker4)
+                    if depth < threshold1:
+                        output_image[y,x] = GaussianBlur.apply_local_blur2d_kernel(color_image_pad,px+pad,py+pad,3*filt_size1,color_ker1)
+                    elif depth < threshold2:
+                        output_image[y,x] = GaussianBlur.apply_local_blur2d_kernel(color_image_pad,px+pad,py+pad,3*filt_size2,color_ker2)
+                    elif depth < threshold3:
+                        output_image[y,x] = GaussianBlur.apply_local_blur2d_kernel(color_image_pad,px+pad,py+pad,3*filt_size3,color_ker3)
+                    else:
+                        output_image[y,x] = GaussianBlur.apply_local_blur2d_kernel(color_image_pad,px+pad,py+pad,3*filt_size4,color_ker4)
+                
         return output_image
 
 
@@ -119,7 +124,7 @@ if __name__ == '__main__':
         for x in range(0,int(width/delta_size)):
             index_image[y,x,0] = min(int(x*delta_size),width)
             index_image[y,x,1] = min(int(y*delta_size),height)
-    color_out1 = GaussianBlur.apply_whole_blur2d_from_depth(color_img,depth_img,index_image)
+    color_out1 = GaussianBlur.apply_whole_blur2d_from_depth(color_img,depth_img,index_image,True)
     height, width,cha = color_out1.shape
     print(height, width,cha)
     # color_out1 = cv2.resize(color_out1,None,fx=delta_size,fy=delta_size)
@@ -128,5 +133,5 @@ if __name__ == '__main__':
     # color_out2 = GaussianBlur.apply_whole_blur2d_kernel(color_img,25,color_ker2,25)
     # # color_img = cv2.imread("./../output_color_web_mercator_clipped/image0001.png")
     # # color_web = GaussianBlur.blur2d_whole(color_img,0.001,2)
-    cv2.imwrite('./../output_color_web_mercator_clipped/image0001_with_depth.png',color_out1) # OK
+    cv2.imwrite('./../output/image0001_with_debug.png',color_out1) # OK
     # cv2.imwrite('./../output_color_web_mercator_clipped/Lenna_blur2.png',color_out2) # OK
