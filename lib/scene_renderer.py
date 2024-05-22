@@ -8,11 +8,12 @@ from os.path import abspath
 class SceneRenderer:
     scene_path            = None
     background_image_path = None
+    output_depth_format   = None
     output_path           = None
     output_color_path     = None
     output_depth_path     = None
 
-    def __init__(self, scene_path = None,background_image_path= None,output_path= None,output_color_path= None,output_depth_path = None):
+    def __init__(self, scene_path = None,background_image_path= None,output_path= None,output_color_path= None,output_depth_path = None,output_depth_format = 'PNG'):
         if scene_path is not None:
             self.load_scene(scene_path)
         
@@ -26,6 +27,7 @@ class SceneRenderer:
         if output_depth_path is None:
            output_depth_path = abspath(output_path + '/../output_depth')
         self.output_depth_path = abspath(output_depth_path)
+        self.output_depth_format = output_depth_format
     def load_scene(self, scene_path):
         if (scene_path is None):
             return False
@@ -86,11 +88,13 @@ class SceneRenderer:
         node_save_color.base_path =  self.output_color_path
         node_save_depth = scene_node_tree.nodes.new('CompositorNodeOutputFile')
         node_save_depth.name = 'save_depth'
-        node_save_depth.base_path =  self.output_depth_path
-        node_save_depth.format.file_format = "HDR" # default is "PNG"
-        node_save_depth.format.color_mode  = "RGB"  # default is "BW"
-        node_save_depth.format.color_depth = "32"
-        node_save_depth.format.compression = 0     # default is 15
+        if self.output_depth_format == 'HDR':
+            node_save_depth.format.file_format = "HDR" # default is "PNG"
+            node_save_depth.format.color_mode  = "RGB"  # default is "BW"
+            node_save_depth.format.color_depth = "32"
+            node_save_depth.format.compression = 0     # default is 15
+        else:
+            node_save_depth.base_path =  self.output_depth_path
 
         scene_node_tree.links.new(output_color,node_save_color.inputs[0])
         scene_node_tree.links.new(output_depth,node_norm_depth.inputs[0])
@@ -143,6 +147,7 @@ class SceneRenderer:
             print("No camera found in the scene.")
             
         camera.data.type = 'PANO'
+        camera.data.panorama_type = 'EQUIRECTANGULAR'
         # camera.location  = camera_location # Cameraの位置を変更する
         # camera.rotation_euler = camera_rotation_euler # Cameraの傾きを変更する
         camera.data.clip_start = 0.001

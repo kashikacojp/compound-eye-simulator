@@ -13,7 +13,7 @@ if __name__ == '__main__':
     clip_center = (0,0)
     # bpyによるシーンの描画
     renderer = scene_renderer.SceneRenderer(scene_filename,image_filename)
-    renderer.run()
+    # renderer.run()
 
     if not os.path.exists('./../output_color_web_mercator'):
         os.mkdir('./../output_color_web_mercator')
@@ -39,20 +39,33 @@ if __name__ == '__main__':
     cv2.imwrite('./../output_color_web_mercator/image0001.png',color_web)
     cv2.imwrite('./../output_color_web_mercator_clipped/image0001.png',color_clipped_img)
     # 出力画像の読み込み
-    depth_img = cv2.imread("./../output_depth/image0001.hdr",cv2.IMREAD_UNCHANGED)
-    print(depth_img)
-    depth_img_saved = np.clip(depth_img * 255, 0, 255).astype(np.uint8)
-    cv2.imwrite('./../output_depth/image0001.png',depth_img_saved)
+    depth_img = None
+    print(renderer.output_depth_format)
+    if renderer.output_depth_format == 'PNG':
+        depth_img = cv2.imread("./../output_depth/image0001.png",cv2.IMREAD_UNCHANGED)
+    if renderer.output_depth_format == 'HDR':
+        depth_img = cv2.imread("./../output_depth/image0001.hdr",cv2.IMREAD_UNCHANGED)
+        depth_img_saved = np.clip(depth_img * 255, 0, 255).astype(np.uint8)
+        cv2.imwrite('./../output_depth/image0001.png',depth_img_saved)
+    
     depth_web = image_utility.ImageUtility.convert_to_web_mercator(depth_img)
-    cv2.imwrite('./../output_depth_web_mercator/image0001.hdr',depth_web)
-    depth_web_saved = np.clip(depth_img * 255, 0, 255).astype(np.uint8)
-    cv2.imwrite('./../output_depth_web_mercator/image0001.png',depth_web_saved)
+
+    if renderer.output_depth_format == 'PNG':
+        cv2.imwrite('./../output_depth_web_mercator/image0001.png',depth_web)
+    if renderer.output_depth_format == 'HDR':
+        cv2.imwrite('./../output_depth_web_mercator/image0001.hdr',depth_web)
+        depth_web_saved = np.clip(depth_img * 255, 0, 255).astype(np.uint8)
+        cv2.imwrite('./../output_depth_web_mercator/image0001.png',depth_web_saved)
+    
     # WEBメルカトルへ変換
     depth_clipped_img = image_utility.ImageUtility.clip_with_bbox(depth_web,clip_center,clip_range)
     # クリッピング
-    cv2.imwrite('./../output_depth_web_mercator_clipped/image0001.hdr',depth_clipped_img)
-    depth_clipped_img_saved = np.clip(depth_clipped_img * 255, 0, 255).astype(np.uint8)
-    cv2.imwrite('./../output_depth_web_mercator_clipped/image0001.png',depth_clipped_img_saved)
+    if renderer.output_depth_format == 'PNG':
+        cv2.imwrite('./../output_depth_web_mercator_clipped/image0001.png',depth_clipped_img)
+    if renderer.output_depth_format == 'HDR':
+        cv2.imwrite('./../output_depth_web_mercator_clipped/image0001.hdr',depth_clipped_img)
+        depth_clipped_img_saved = np.clip(depth_clipped_img * 255, 0, 255).astype(np.uint8)
+        cv2.imwrite('./../output_depth_web_mercator_clipped/image0001.png',depth_clipped_img_saved)
     # 離散格子の幅とサイズ
     delta_size = 8
     # ガウシアンの処理(中心点ごとに異なるパラメータのブラーをかける→python上でfor文?)
