@@ -2,6 +2,7 @@ import image_utility
 import scene_renderer
 import gaussian_blur
 import grid_filter
+import hex_filter
 import numpy as np
 import os
 import cv2
@@ -66,29 +67,38 @@ if __name__ == '__main__':
         cv2.imwrite('./../output_depth_web_mercator_clipped/image0001.hdr',depth_clipped_img)
         depth_clipped_img_saved = np.clip(depth_clipped_img * 255, 0, 255).astype(np.uint8)
         cv2.imwrite('./../output_depth_web_mercator_clipped/image0001.png',depth_clipped_img_saved)
-    # 離散格子の幅とサイズ
-    delta_size = 8
-    # ガウシアンの処理(中心点ごとに異なるパラメータのブラーをかける→python上でfor文?)
-    # 結構重いかも(pythonのまま→cython or C++ DLL)
-    # numpyでfor文関数の実行をc++側に持っていけるようにしなければいけない
-    height, width,cha   = color_clipped_img.shape
-    # IndexMap: 二次元のブラー入力画素値のリクエストを作成
-    # 現在は、格子のため、出力そのままのリサイズ～出力画像
-    index_image = np.zeros(( int(height/delta_size), int(width/delta_size), 2), dtype=np.int32)
-    for y in range(0,int(height/delta_size)):
-        for x in range(0,int(width/delta_size)):
-            index_image[y,x,0] = min(int(x*delta_size),width)
-            index_image[y,x,1] = min(int(y*delta_size),height)
-    gauss_image = gaussian_blur.GaussianBlur.apply_whole_blur2d_from_depth(color_clipped_img,depth_clipped_img,index_image)
-    debug_image = gaussian_blur.GaussianBlur.apply_whole_blur2d_from_depth(color_clipped_img,depth_clipped_img,index_image,True)
-    # array.map(|x x*2|)
-    # 処理を分解してnumpyのお作法に従うように変換するコスト(実装コスト)
-    # →今日試せる？
-    # 四角形へ変換する
-    grid_img = grid_filter.GridFilter.apply_filter(gauss_image,delta_size,delta_size,0.1)
-    cv2.imwrite('./../output/gauss_output.png',gauss_image) # OK
-    cv2.imwrite('./../output/debug_output.png',debug_image) # OK
-    cv2.imwrite('./../output/final_output.png',grid_img) # OK
 
+    mode = 'Hex'
+    if mode == 'Grid':
+        # 離散格子の幅とサイズ
+        delta_size = 8
+        # ガウシアンの処理(中心点ごとに異なるパラメータのブラーをかける→python上でfor文?)
+        # 結構重いかも(pythonのまま→cython or C++ DLL)
+        # numpyでfor文関数の実行をc++側に持っていけるようにしなければいけない
+        height, width,cha   = color_clipped_img.shape
+        # IndexMap: 二次元のブラー入力画素値のリクエストを作成
+        # 現在は、格子のため、出力そのままのリサイズ～出力画像
+        index_image = np.zeros(( int(height/delta_size), int(width/delta_size), 2), dtype=np.int32)
+        for y in range(0,int(height/delta_size)):
+            for x in range(0,int(width/delta_size)):
+                index_image[y,x,0] = min(int(x*delta_size),width)
+                index_image[y,x,1] = min(int(y*delta_size),height)
+        gauss_image = gaussian_blur.GaussianBlur.apply_whole_blur2d_from_depth(color_clipped_img,depth_clipped_img,index_image)
+        debug_image = gaussian_blur.GaussianBlur.apply_whole_blur2d_from_depth(color_clipped_img,depth_clipped_img,index_image,True)
+        # array.map(|x x*2|)
+        # 処理を分解してnumpyのお作法に従うように変換するコスト(実装コスト)
+        # →今日試せる？
+        # 四角形へ変換する
+        grid_img = grid_filter.GridFilter.apply_filter(gauss_image,delta_size,delta_size,0.1)
+        cv2.imwrite('./../output/gauss_output.png',gauss_image) # OK
+        cv2.imwrite('./../output/debug_output.png',debug_image) # OK
+        cv2.imwrite('./../output/final_output.png',grid_img) # OK
+    if mode == 'Hex':
+        # WEBメルカトルへ変換
+        hex_filter = hex_filter.HexFilter(size=(512,512), pad_size= (50,50),diam=8)
+        gauss_image = gaussian_blur.GaussianBlur.apply_whole_blur1d_from_depth(color_clipped_img,depth_clipped_img,hex_filter.hex_indices)
+        gauss_image = gauss_image.astype(np.float32)/255.0
+        gauss_image = gauss_image[:,[2, 1, 0]]
+        hex_filter.render(gauss_image,'./../output/final_output_hex.png')
 
     
