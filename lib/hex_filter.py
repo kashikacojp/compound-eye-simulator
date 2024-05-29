@@ -19,6 +19,7 @@ class HexFilter:
     diam       = 64
     hex_centers= None
     hex_indices= None
+    # TODO: 画像のクリップ範囲に対して、格子のX方向の六角形数が与えられたとき、Y方向の六角形数および直径を計算できるようにする
     def __init__(self,size = (256,256), pad_size= (50,50), diam=64):
         x_size,y_size = size
         x_pad_size,y_pad_size = pad_size
@@ -60,10 +61,13 @@ class HexFilter:
     def render(self,color_web,filename = None):
         x_hex_coords = self.hex_centers[:, 0]
         y_hex_coords = self.hex_centers[:, 1]
+        h_fig = plt.figure(figsize=(self.x_size/16, self.y_size/16))
+        h_ax = h_fig.add_axes([0, 0, 1, 1])
         ax = plot_single_lattice_custom_colors(x_hex_coords, y_hex_coords,
                                     face_color  = color_web,
                                     edge_color  = color_web,
                                     min_diam    = self.diam*0.99,
+                                    h_ax        = h_ax,
                                     plotting_gap= 0.05,
                                     rotate_deg  = 0)
         (bound_min_x,bound_min_y) = self.bound_min
@@ -71,14 +75,14 @@ class HexFilter:
         # print(ax)      
         # print(hex_centers)                     
         ax.axis("off")
-        plt.axis('tight')
-        plt.xlim(bound_min_x,bound_max_x)       
-        plt.ylim(bound_min_y,bound_max_y) 
+        ax.axis('tight')
+        ax.set_xlim(bound_min_x,bound_max_x)       
+        ax.set_ylim(bound_min_y,bound_max_y) 
+        # plt.margins(x=0,y=0)
         if not filename:
-            plt.show()
+            h_fig.show()
         else :
-            plt.gcf().subplots_adjust(left=0, right=1, bottom=0, top=1)
-            plt.savefig(filename)
+            h_fig.savefig(filename,bbox_inches='tight',pad_inches=0,dpi=16)
 
 # import gaussian_blur
 # if __name__ == "__main__":

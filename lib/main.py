@@ -8,13 +8,13 @@ import os
 import cv2
 
 if __name__ == '__main__':
-    scene_filename = './../Flower/flower_middle.blend'
+    scene_filename = './../Flower/flower_far.blend'
     image_filename = './../kloofendal_43d_clear_puresky_4k.hdr'
     clip_range = (512,512)
     clip_center = (0,0)
     # bpyによるシーンの描画
     renderer = scene_renderer.SceneRenderer(scene_filename,image_filename)
-    # renderer.run()
+    renderer.run()
 
     if not os.path.exists('./../output_color_web_mercator'):
         os.mkdir('./../output_color_web_mercator')
@@ -95,10 +95,14 @@ if __name__ == '__main__':
         cv2.imwrite('./../output/final_output.png',grid_img) # OK
     if mode == 'Hex':
         # WEBメルカトルへ変換
-        hex_filter = hex_filter.HexFilter(size=(512,512), pad_size= (50,50),diam=8)
+        hex_filter = hex_filter.HexFilter(size=(512,512), pad_size= (50,50),diam=16)
         gauss_image = gaussian_blur.GaussianBlur.apply_whole_blur1d_from_depth(color_clipped_img,depth_clipped_img,hex_filter.hex_indices)
+        debug_image = gaussian_blur.GaussianBlur.apply_whole_blur1d_from_depth(color_clipped_img,depth_clipped_img,hex_filter.hex_indices, vis_mode=True)
         gauss_image = gauss_image.astype(np.float32)/255.0
         gauss_image = gauss_image[:,[2, 1, 0]]
+        debug_image = debug_image.astype(np.float32)/255.0
+        debug_image = debug_image[:,[2, 1, 0]]
         hex_filter.render(gauss_image,'./../output/final_output_hex.png')
+        hex_filter.render(debug_image,'./../output/debug_output_hex.png')
 
     
