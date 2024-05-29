@@ -1,0 +1,1 @@
+setup.bat && python ./lib/main.py -s ./Flower/flower.blend -i ./Flower/symmetrical_garden_02_4k.hdr -o ./output

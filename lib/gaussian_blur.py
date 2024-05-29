@@ -116,9 +116,8 @@ class GaussianBlur:
         return output_image
 
     @staticmethod
-    def apply_whole_blur1d_from_depth(color_image, depth_image, index_image = None,pad=100, vis_mode = False):
+    def apply_whole_blur1d_from_depth(color_image, depth_image, index_image = None, filt_sigma=9,  step = 15,pad=100, vis_mode = False):
         # TODO: 事前に計算するのではなくて、連続的に処理するべきか？
-        filt_sigma = 1
         # filt_size1 = 5
         # filt_size2 = 9
         # filt_size3 = 13
@@ -149,9 +148,14 @@ class GaussianBlur:
                 px = min(max(px,0),dep_width -1)
                 py = min(max(py,0),dep_height-1)
                 depth = depth_image[py,px,0]
-                filt_size = 4 * int(depth/32) + 1
+                # 32で割らず完全比例も試す
+                filt_size = int(float(depth)/step)
+                if (filt_size % 2 == 0):
+                    filt_size += 1
+                
                 if vis_mode:
-                    output_image[x] = (32.0*int(depth/32),32.0*int(depth/32),32.0*int(depth/32))
+                    vis_color = step * int(float(depth)/step)
+                    output_image[x] = (vis_color,vis_color,vis_color)
                     # if depth < threshold1:
                     #     output_image[x] = (255.0*threshold1,255.0*threshold1,255.0*threshold1)
                     # elif depth < threshold2:

@@ -2,9 +2,8 @@ import cv2
 import sys
 import os
 import numpy as np
-from   os.path import abspath
-from   hexalattice.hexalattice import *
-import numpy as np
+from os.path import abspath
+from thirdparty import hexalattice as hl
 from matplotlib import pyplot as plt
 
 class HexFilter:
@@ -20,15 +19,25 @@ class HexFilter:
     hex_centers= None
     hex_indices= None
     # TODO: 画像のクリップ範囲に対して、格子のX方向の六角形数が与えられたとき、Y方向の六角形数および直径を計算できるようにする
-    def __init__(self,size = (256,256), pad_size= (50,50), diam=64):
+    def __init__(self, size = (256,256), pad_size= (50,50), diam=64,nx=None,ny=None):
+        
         x_size,y_size = size
         x_pad_size,y_pad_size = pad_size
         x_range = x_size + x_pad_size * 2
         y_range = y_size + y_pad_size * 2
-        nx =np.ceil((x_range/(diam * np.sqrt(3.0)/2.0))-0.5)
-        ny =np.ceil((y_range/diam-1)*(4.0/3.0))
+        
+        if (nx is None) and (ny is None):
+            nx =int(np.ceil((x_range/(diam * np.sqrt(3.0)/2.0))-0.5))
+            ny =int(np.ceil((y_range/diam-1)*(4.0/3.0)))
+        elif (nx is None):
+            diam = y_range / ( (ny * 3.0/4.0)+1)
+            nx   = int(np.ceil((x_range/(diam * np.sqrt(3.0)/2.0))-0.5))
+        elif (ny is None):
+            diam = x_range/((nx+0.5)*np.sqrt(3.0)/2.0)
+            ny   =int(np.ceil((y_range/diam-1)*(4.0/3.0)) )
+        
         print("nx="+str(nx)+", ny="+str(ny))
-        hex_centers, _ = create_hex_grid(nx=nx,ny=ny,min_diam=diam,do_plot=False)
+        hex_centers, _ = hl.create_hex_grid(nx=nx,ny=ny,min_diam=diam,do_plot=False)
         max_x = np.max(hex_centers[:, 0]) 
         max_y = np.max(hex_centers[:, 1])
         min_x = np.min(hex_centers[:, 0]) 
@@ -63,7 +72,7 @@ class HexFilter:
         y_hex_coords = self.hex_centers[:, 1]
         h_fig = plt.figure(figsize=(self.x_size/16, self.y_size/16))
         h_ax = h_fig.add_axes([0, 0, 1, 1])
-        ax = plot_single_lattice_custom_colors(x_hex_coords, y_hex_coords,
+        ax = hl.plot_single_lattice_custom_colors(x_hex_coords, y_hex_coords,
                                     face_color  = color_web,
                                     edge_color  = color_web,
                                     min_diam    = self.diam*0.99,
