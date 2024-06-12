@@ -93,6 +93,7 @@ class SceneRenderer:
             node_save_depth.format.color_mode  = "RGB"  # default is "BW"
             node_save_depth.format.color_depth = "32"
             node_save_depth.format.compression = 0     # default is 15
+            node_save_depth.base_path =  self.output_depth_path
         else:
             node_save_depth.base_path =  self.output_depth_path
 

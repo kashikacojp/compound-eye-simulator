@@ -9,5 +9,5 @@ REM pip3 install pipenv
 REM pipenv --python 3.11
 
 REM pipenv setting
-pipenv shell
-pipenv update
+CALL pipenv shell 
+CALL pipenv install 

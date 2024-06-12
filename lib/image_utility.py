@@ -77,16 +77,18 @@ class ImageUtility:
                     continue
                 clipped_image[y,x] = image[ry,rx]
         return clipped_image
-
-# if __name__ == '__main__':
-#     color_img = cv2.imread("./../output_color/image0001.png")
-#     color_web = ImageUtility.convert_to_web_mercator(color_img)
-#     cv2.imwrite('./../output_color_web_mercator/image0001.png',color_web) # OK
-#     color_img_clipped = ImageUtility.clip_with_bbox(color_web,(0,0),(1024,1024))
-#     cv2.imwrite('./../output_color_web_mercator/image0001_clipped.png',color_img_clipped)
-#     depth_img = cv2.imread("./../output_depth/image0001.png")
-#     depth_web = ImageUtility.convert_to_web_mercator(depth_img)
-#     cv2.imwrite('./../output_depth_web_mercator/image0001.png',depth_web)
-#     depth_img_clipped = ImageUtility.clip_with_bbox(depth_web,(0,0),(1024,1024))
-#     cv2.imwrite('./../output_depth_web_mercator/image0001_clipped.png',depth_img_clipped)
-
+    @staticmethod
+    def clip_with_plate_carree_bbox(image, clip_center_deg_phi,  clip_center_deg_theta, ommatidia_delta_deg_phi, ommatidia_count, aspect = 1.0):
+        # 正距円筒図法としてクリッピング
+        # ommatidia_delta_deg: 個眼間の角度
+        # ommatidia_count: 個眼の数
+        # clip_with_bboxを内部的に使う
+        # 最終的な画像の縦横比をaspectで指定
+        height, width, channels = image.shape
+        clip_center = (int( (clip_center_deg_phi)*width/360.0), int( (clip_center_deg_theta)*height/180.0))
+        clip_range_x= int(ommatidia_count*ommatidia_delta_deg_phi*width/360.0)
+        clip_range_y= int(clip_range_x * aspect)
+        clip_range  = (clip_range_x, clip_range_y)
+        print("clip_center=",clip_center)
+        print("clip_range=",clip_range)
+        return ImageUtility.clip_with_bbox(image, clip_center, clip_range)

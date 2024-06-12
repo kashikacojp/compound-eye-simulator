@@ -7,6 +7,7 @@ from os.path import abspath
 class GaussianBlur:
     @staticmethod
     def generate_blur2d_kernel(sigma,filter_size):
+
         m = filter_size 
         n = filter_size
         m_half = m // 2
@@ -35,6 +36,10 @@ class GaussianBlur:
         height,width,channel = image.shape
         output = np.ndarray(channel,dtype=image.dtype)
         filter_range = filter_size // 2
+        if pixel_y-filter_range < 0 or pixel_y+filter_range+1 >= height:
+            raise ValueError("pixel_y is out of range")
+        if pixel_x-filter_range < 0 or pixel_x+filter_range+1 >= width:
+            raise ValueError("pixel_x is out of range")
         for c in range(channel):
             sub_img = image[pixel_y-filter_range:pixel_y+filter_range+1,pixel_x-filter_range:pixel_x+filter_range+1,c]
             (t_w,t_h) = sub_img.shape
@@ -116,7 +121,7 @@ class GaussianBlur:
         return output_image
 
     @staticmethod
-    def apply_whole_blur1d_from_depth(color_image, depth_image, index_image = None, filt_sigma=9,  step = 15,pad=100, vis_mode = False):
+    def apply_whole_blur1d_from_depth(color_image, depth_image, index_image = None, min_depth = 0.0, max_depth = 1.0,  delta_depth = None, filt_sigma=9, max_filt_size=15, step = 15, pad=100, vis_mode = False):
         # TODO: 事前に計算するのではなくて、連続的に処理するべきか？
         # filt_size1 = 5
         # filt_size2 = 9
@@ -133,11 +138,23 @@ class GaussianBlur:
         # color_ker4 = GaussianBlur.generate_blur2d_kernel(filt_sigma , filt_size4)
         # # 
         # #
+        if index_image is None:
+            raise ValueError("index_image is None")
+    
+        input_depth_min = np.min(depth_image)# 5
+        input_depth_max = np.max(depth_image)# 154
+        
+        if not min_depth:
+            min_depth = input_depth_min
+        if not max_depth:
+            max_depth = input_depth_max
+        if not delta_depth:
+            delta_depth = (max_depth - min_depth)/float(step-1)
+        
 
-        depth_min = np.min(depth_image)# 5
-        depth_max = np.max(depth_image)# 154
-        print(depth_min,depth_max)
+        print(input_depth_min,input_depth_max,delta_depth)
         color_image_pad = np.pad(color_image,[(pad,pad),(pad,pad),(0,0)],'edge')
+        depth_image_pad = np.pad(depth_image,[(pad,pad),(pad,pad),(0,0)],'edge')
         pad_width, pad_height,channles   = color_image_pad.shape
         dep_width, dep_height,_ = depth_image.shape
         count,_ = index_image.shape
@@ -147,14 +164,15 @@ class GaussianBlur:
                 py = index_image[x,1]
                 px = min(max(px,0),dep_width -1)
                 py = min(max(py,0),dep_height-1)
-                depth = depth_image[py,px,0]
-                # 32で割らず完全比例も試す
-                filt_size = int(float(depth)/step)
+
+                depth = depth_image_pad[py+pad,px+pad,0]
+                rel_depth =  float(min(max(int((depth-min_depth)/delta_depth),0),step))/float(step)
+                filt_size = int(float(max_filt_size) * rel_depth)
                 if (filt_size % 2 == 0):
                     filt_size += 1
                 
                 if vis_mode:
-                    vis_color = step * int(float(depth)/step)
+                    vis_color = 255.0*rel_depth
                     output_image[x] = (vis_color,vis_color,vis_color)
                     # if depth < threshold1:
                     #     output_image[x] = (255.0*threshold1,255.0*threshold1,255.0*threshold1)

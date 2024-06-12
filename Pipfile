@@ -9,7 +9,6 @@ opencv-python = "*"
 bpy = "*"
 jupyter = "*"
 jupytext = "*"
-setuptools = "*"
 matplotlib = "*"
 
 [dev-packages]
