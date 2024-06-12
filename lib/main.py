@@ -12,13 +12,13 @@ import argparse
 if __name__ == '__main__':
     # 引数の処理
     parser = argparse.ArgumentParser(description='Generate compound eye image from a scene file')
-    parser.add_argument('-s', '--scene'     , type=str             , help='シーンのファイルパス', default='./../Flower/flower.blend')
-    parser.add_argument('-i', '--image'     , type=str             , help='環境マップのパス', default='./../symmetrical_garden_02_4k.hdr')
-    parser.add_argument('-o', '--output'    , type=str             , help='出力ディレクトリ', default='./../output')
-    parser.add_argument('-m', '--mode'      , type=str             , help='モード(現在はHexのみ)', default='Hex')
+    parser.add_argument('-s', '--scene'     , type=str             , help='シーンのファイルパス'           , default='./../Flower/flower_middle.blend')
+    parser.add_argument('-i', '--image'     , type=str             , help='環境マップのパス'               , default='./../symmetrical_garden_02_4k.hdr')
+    parser.add_argument('-o', '--output'    , type=str             , help='出力ディレクトリ'               , default='./../output')
+    parser.add_argument('-m', '--mode'      , type=str             , help='モード(現在はHexのみ)'          , default='Hex')
     parser.add_argument('--skip-render'     , type=bool            , help='描画をスキップして、現在の出力に適用', default=False)
     parser.add_argument('--clip-center'     , type=float, nargs="*", help='極座標系におけるクリップの中心位置([0,0]~[±180,±90])'     , default=[0.0, 0.0])
-    parser.add_argument("--ommatidia-fov"   , type=float           , help='個眼の視野角'                  , default=30) 
+    parser.add_argument("--ommatidia-fov"   , type=float           , help='個眼の視野角'                   , default=30) 
     parser.add_argument('--ommatidia-delta' , type=float           , help='個眼の間隔(方位角)'             , default=2)
     parser.add_argument('--ommatidia-count' , type=int             , help='個眼の個数(方位角)'             , default=30)
     parser.add_argument('--aspect'          , type=float           , help='アスペクト比'                   , default=1.0)
