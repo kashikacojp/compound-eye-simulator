@@ -4,6 +4,20 @@ from sphere_to_plane import sphere_to_plane_fast
 from hexagonal_filter import hexagonal_filter, debug_filter, hexagonal_depth_gaussian_filter, hexagonal_gaussian_filter, apply_uniform_blur
 import glob
 import os
+import OpenEXR
+import Imath
+import array
+
+def load_exr_depth(filename):
+    file = OpenEXR.InputFile(filename)
+    dw = file.header()['dataWindow']
+    size = (dw.max.x - dw.min.x + 1, dw.max.y - dw.min.y + 1)
+
+    depth_str = file.channel('V', Imath.PixelType(Imath.PixelType.FLOAT))
+    depth_array = array.array('f', depth_str)
+    depth_image = np.array(depth_array).reshape(size[1], size[0])
+
+    return depth_image
 
 def create_viewer(output_width, output_height, image_format):
     # 画像の読み込み
@@ -12,7 +26,7 @@ def create_viewer(output_width, output_height, image_format):
     panorama = cv2.imread(image_files[current_image_index])
 
     # Depthファイルのパスを生成
-    depth_format = image_format.replace('output_color', 'output_depth')
+    depth_format = image_format.replace('output_color', 'output_depth').replace('.png', '.exr')
     depth_files = sorted(glob.glob(depth_format))
 
     settings = {
@@ -24,9 +38,8 @@ def create_viewer(output_width, output_height, image_format):
         'filter': 'none',  # フィルタの初期設定
         'view_mode': 'color',  # 表示モードの初期設定
         'debug_mode': False,  # デバッグモードの初期設定
-        'blur_size': 30  # ブラーサイズの初期値 (追加)
+        'blur_size': 30  # ブラーサイズの初期値
     }
-
 
     cv2.namedWindow('360 Viewer', cv2.WINDOW_NORMAL)
     cv2.resizeWindow('360 Viewer', output_width, output_height)  # ウィンドウサイズを設定
@@ -34,7 +47,7 @@ def create_viewer(output_width, output_height, image_format):
     def update_view():
         nonlocal panorama
         panorama = cv2.imread(image_files[current_image_index])
-        depth_image = cv2.imread(depth_files[current_image_index], cv2.IMREAD_ANYDEPTH)
+        depth_image = load_exr_depth(depth_files[current_image_index])
 
         fov = settings['interommatidial_angle'] * settings['ommatidium_count']
         result_color = sphere_to_plane_fast(panorama, fov, settings['theta'], settings['phi'], output_width, output_height)
@@ -62,7 +75,6 @@ def create_viewer(output_width, output_height, image_format):
         
         # Depthイメージを可視化
         result_depth_vis = cv2.normalize(result_depth, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
-        #result_depth_vis = cv2.applyColorMap(result_depth_vis, cv2.COLORMAP_JET)
         
         # 現在の表示モードに応じて表示する画像を選択
         if settings['view_mode'] == 'color':
@@ -131,12 +143,12 @@ def create_viewer(output_width, output_height, image_format):
             settings['phi'] = max(settings['phi'] - 5, -90)
             print_info(f"Key: S - Rotate down, Phi: {settings['phi']}")
             update_view()
-        elif key == ord('d'):
-            settings['theta'] = (settings['theta'] - 10) % 360
-            print_info(f"Key: A - Rotate left, Theta: {settings['theta']}")
-            update_view()
         elif key == ord('a'):
             settings['theta'] = (settings['theta'] + 10) % 360
+            print_info(f"Key: A - Rotate left, Theta: {settings['theta']}")
+            update_view()
+        elif key == ord('d'):
+            settings['theta'] = (settings['theta'] - 10) % 360
             print_info(f"Key: D - Rotate right, Theta: {settings['theta']}")
             update_view()
         elif key == ord('['):  # [キー
@@ -147,6 +159,14 @@ def create_viewer(output_width, output_height, image_format):
             current_image_index = (current_image_index + 1) % len(image_files)
             print_info(f"Key: ] - Next image, Index: {current_image_index}")
             update_view()
+        elif key == ord('}'):  # Shift+]
+            current_image_index = min(current_image_index + 10, len(image_files) - 1)
+            print_info(f"Key: Shift+] - Forward 10 frames, Index: {current_image_index}")
+            update_view()
+        elif key == ord('{'):  # Shift+[
+            current_image_index = max(current_image_index - 10, 0)
+            print_info(f"Key: Shift+[ - Backward 10 frames, Index: {current_image_index}")
+            update_view()
         elif key == 27:  # ESCキー
             print_info("Key: ESC - Quit the viewer")
             break
@@ -154,7 +174,6 @@ def create_viewer(output_width, output_height, image_format):
             settings['blur_size'] = (settings['blur_size'] % 50) + 1
             print_info(f"Key: B - Set blur size: {settings['blur_size']}")
             update_view()
-
     cv2.destroyAllWindows()
     return settings
 
@@ -170,7 +189,7 @@ if __name__ == "__main__":
     # 出力解像度を設定（デフォルト値付き）
     output_width = get_input_with_default("Enter output width", default_width)
     output_height = get_input_with_default("Enter output height", default_height)
-    image_format = get_input_with_default("Enter image format (e.g., 'images/*.png'): ", 'D:/Work/KASHIKA/Develop/compound-eye-simulator/Flower/jim/workflow/step1-panorama-rendering/output_color/*.png')
+    image_format = get_input_with_default("Enter image format (e.g., 'images/*.png'): ", '../step1-panorama-rendering/output_color/*.png')
     
     final_settings = create_viewer(output_width, output_height, image_format)
 

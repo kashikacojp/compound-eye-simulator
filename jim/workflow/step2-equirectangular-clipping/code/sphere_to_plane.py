@@ -34,7 +34,7 @@ def sphere_to_plane_fast(image, fov, theta, phi, out_width, out_height):
     
     # 360度画像上の座標を計算
     source_x = ((theta / (2 * np.pi) + 0.5) * width) % width
-    source_y = (phi / np.pi + 0.5) * height
+    source_y = (1 - (phi / np.pi + 0.5)) * height
     
     # 座標を適切な範囲に制限
     source_x = np.clip(source_x, 0, width - 1)
