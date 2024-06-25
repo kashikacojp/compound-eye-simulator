@@ -1,0 +1,6 @@
+output_color/
+output_depth/
+.venv/
+thirdparty/
+*.mp4
+*.png
