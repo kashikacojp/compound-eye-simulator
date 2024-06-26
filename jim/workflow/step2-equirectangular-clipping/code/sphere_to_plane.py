@@ -1,17 +1,14 @@
 import cv2
 import numpy as np
+from numba import jit
 
-def sphere_to_plane_fast(image, fov, theta, phi, out_width, out_height):
-    height, width = image.shape[:2]
-    
+@jit(nopython=True)
+def calc_map_xy(x,y,width, height, fov, theta, phi, out_width, out_height):
     # fovの上限を設定し、ラジアンに変換
     fov = min(fov, 179)
     fov_rad = np.deg2rad(fov)
     theta_rad = np.deg2rad(theta)
     phi_rad = np.deg2rad(phi)
-    
-    # 座標グリッドを作成
-    x, y = np.meshgrid(np.arange(out_width), np.arange(out_height))
     
     # スクリーン座標を -1 から 1 の範囲に正規化
     x = (x - out_width / 2) / (out_width / 2)
@@ -39,10 +36,17 @@ def sphere_to_plane_fast(image, fov, theta, phi, out_width, out_height):
     # 座標を適切な範囲に制限
     source_x = np.clip(source_x, 0, width - 1)
     source_y = np.clip(source_y, 0, height - 1)
-    
+
     # OpenCVのremap関数を使用して高速に画像をマッピング
     map_x = source_x.astype(np.float32)
     map_y = source_y.astype(np.float32)
+    return map_x, map_y
+
+
+def sphere_to_plane_fast(image, fov, theta, phi, out_width, out_height):
+    # 座標グリッドを作成
+    x, y = np.meshgrid(np.arange(out_width), np.arange(out_height))
+    height, width = image.shape[:2]
+    map_x, map_y = calc_map_xy(x,y,width, height, fov, theta, phi, out_width, out_height)
     out_image = cv2.remap(image, map_x, map_y, cv2.INTER_LINEAR)
-    
     return out_image

@@ -7,6 +7,7 @@ import os
 import OpenEXR
 import Imath
 import array
+import time
 
 def load_exr_depth(filename):
     file = OpenEXR.InputFile(filename)
@@ -45,20 +46,28 @@ def create_viewer(output_width, output_height, image_format):
     cv2.resizeWindow('360 Viewer', output_width, output_height)  # ウィンドウサイズを設定
 
     def update_view():
+        start_all = time.perf_counter() # 処理時間計測
+        start = time.perf_counter() # 処理時間計測
         nonlocal panorama
         panorama = cv2.imread(image_files[current_image_index])
         depth_image = load_exr_depth(depth_files[current_image_index])
-
+        end   = time.perf_counter() # 処理時間計測
+        print ('load_input_images: {:.2f} ms'.format((end-start)*1000))
+        start = time.perf_counter() # 処理時間計測
         fov = settings['interommatidial_angle'] * settings['ommatidium_count']
         result_color = sphere_to_plane_fast(panorama, fov, settings['theta'], settings['phi'], output_width, output_height)
         result_depth = sphere_to_plane_fast(depth_image, fov, settings['theta'], settings['phi'], output_width, output_height)
-        
+        end   = time.perf_counter() # 処理時間計測
+        print ('sphere_to_plane: {:.2f} ms'.format((end-start)*1000))
+        start = time.perf_counter() # 処理時間計測
         # フィルタサイズを計算
         filter_size = int(settings['ommatidium_angle'] / 360 * panorama.shape[1])
         
         if settings['debug_mode']:
             result_color = debug_filter(result_color, settings['ommatidium_count'], filter_size)
             result_depth = debug_filter(result_depth, settings['ommatidium_count'], filter_size)
+            end = time.perf_counter() # 処理時間計測
+            print ('debug_filter: {:.2f} ms'.format((end-start)*1000))
         elif settings['filter'].startswith('hexagonal'):
             if settings['filter'] == 'hexagonal':
                 result_color = hexagonal_filter(result_color, settings['ommatidium_count'], filter_size)
@@ -66,21 +75,34 @@ def create_viewer(output_width, output_height, image_format):
                 result_color = hexagonal_gaussian_filter(result_color, settings['ommatidium_count'], filter_size)
             elif settings['filter'] == 'hexagonal_depth_gaussian':
                 result_color = hexagonal_depth_gaussian_filter(result_color, result_depth, settings['ommatidium_count'], filter_size)
-            
+            end = time.perf_counter() # 処理時間計測
+            print ('color_'+settings['filter']+ ' filter: {:.2f} ms'.format((end-start)*1000))
+            start = time.perf_counter() # 処理時間計測
             # すべての hexagonal フィルタに平滑化フィルタを適用
             result_color = apply_uniform_blur(result_color, settings['blur_size'])
-            
+            end = time.perf_counter() # 処理時間計測
+            print ('apply_uniform_blur: {:.2f} ms'.format((end-start)*1000))
+            start = time.perf_counter() # 処理時間計測
             # depth 画像には hexagonal フィルタのみを適用
             result_depth = hexagonal_filter(result_depth, settings['ommatidium_count'], filter_size)
-        
+            end = time.perf_counter() # 処理時間計測
+            print ('depth_hexagonal_filter: {:.2f} ms'.format((end-start)*1000))
+
+        start = time.perf_counter() # 処理時間計測
         # Depthイメージを可視化
         result_depth_vis = cv2.normalize(result_depth, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
-        
+        end = time.perf_counter() # 処理時間計測
+        print ('depth_visualization: {:.2f} ms'.format((end-start)*1000))
+        start = time.perf_counter() # 処理時間計測
         # 現在の表示モードに応じて表示する画像を選択
         if settings['view_mode'] == 'color':
             cv2.imshow('360 Viewer', result_color)
         else:
             cv2.imshow('360 Viewer', result_depth_vis)
+        end = time.perf_counter() # 処理時間計測
+        print ('imshow: {:.2f} ms'.format((end-start)*1000))
+        end_all = time.perf_counter() # 処理時間計測
+        print ('update_view: {:.2f} ms'.format((end_all-start_all)*1000))
 
     def print_info(message):
         print(message)
