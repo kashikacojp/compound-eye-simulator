@@ -18,6 +18,11 @@ def load_exr_depth(filename):
     depth_array = array.array('f', depth_str)
     depth_image = np.array(depth_array).reshape(size[1], size[0])
 
+    depth_min = np.min(depth_image)
+    depth_max = np.max(depth_image)
+
+    print("DEBUG: load_exr_depth: depth_min = {}, depth_max = {}".format(depth_min, depth_max))
+
     return depth_image
 
 def create_viewer(output_width, output_height, image_format):
@@ -90,7 +95,13 @@ def create_viewer(output_width, output_height, image_format):
 
         start = time.perf_counter() # 処理時間計測
         # Depthイメージを可視化
-        result_depth_vis = cv2.normalize(result_depth, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+        depth_min = np.min(result_depth)
+        depth_max = np.max(result_depth)
+        print("DEBUG: update_view: depth_min = {}, depth_max = {}".format(depth_min, depth_max))
+        result_depth_log = np.clip(result_depth,0,100)
+        result_depth_log = np.log(result_depth_log)
+        result_depth_vis = cv2.normalize(result_depth_log, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+        result_depth_vis = cv2.applyColorMap(result_depth_vis, cv2.COLORMAP_JET)
         end = time.perf_counter() # 処理時間計測
         print ('depth_visualization: {:.2f} ms'.format((end-start)*1000))
         start = time.perf_counter() # 処理時間計測
