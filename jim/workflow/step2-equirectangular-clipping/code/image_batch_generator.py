@@ -166,9 +166,12 @@ def create_viewer(output_width, output_height, image_format):
         #     print_info(f"Key: [ - Previous image, Index: {current_image_index}")
         #     update_view()
         # elif key == ord(']'):  # ]キー
-            current_image_index = (current_image_index + 1) % len(image_files)
-            print_info(f"Key: ] - Next image, Index: {current_image_index}")
-            update_view()
+        current_image_index = (current_image_index + 1)
+        print_info(f"Key: ] - Next image, Index: {current_image_index}")
+        update_view()
+
+        if current_image_index == len(image_files) - 1:
+            break
         # elif key == ord('}'):  # Shift+]
         #     current_image_index = min(current_image_index + 10, len(image_files) - 1)
         #     print_info(f"Key: Shift+] - Forward 10 frames, Index: {current_image_index}")
