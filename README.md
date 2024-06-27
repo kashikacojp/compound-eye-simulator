@@ -1,23 +1,82 @@
 # フォルダ構造
-jim
-- workflow: プログラムなど全部入っている
-    - step1-panorama-rendering: Blenderのレンダリング結果を入れるための場所
+- assets:Blenderシーン、環境マップ等を配置
+- thirdparty: ffmpeg等外部ツールを配置
+- workfspace: プログラムを配置
+    - step1-panorama-rendering: Blenderのレンダリング結果を入れる場所
         - （想定）output_color/
         - （想定）output_depth/
-        - test_generate_check_videos.bat: colorの画像を動画化するバッチファイル（デプスはexr未対応なので）
+        - test_generate_check_videos.bat: colorの画像を動画化するバッチファイル（デプスはexrのため現時点で未対応）
     - step2-equirectangular-clipping
-        - code/ : 全てのコードが含まれる
+        - code : 全てのコードが含まれる
             - hexagonal_filter.py : 六角形化、ぼかし、等実行
             - sphere_to_plane.py : 球面に張り付けてクリッピング
             - viewer.py : 上記二つを呼び出す
-        - run.bat : viewerを起動
-        - 
+            - image_batch_generator.py : バッチ処理で最終結果を出力
+        - settings: 現時点では設定値の記録用にテキストファイル配置場所。後日TOMLパッケージを使用してここから設定用ファイルを直接ロードして起動
+        - viewer.bat : viewerを起動
+        - image_batch_generator.bat : バッチ処理を実行
+- setup.bat : pipenvを用いてPython環境及び必要なライブラリをインストール
+
 # Setup
+- Python 3.11をインストール
+- pipenvをインストール
+- 下記バッチファイルを実行
 ```
 setup.bat
 ```
 
 # Usage
+## 共通
+- Blenderで必要なアニメーション・設定でレンダリング
+- 必須
+    - パノラマ（360度描画）画像レンダリング
+    - カラー画像・デプス画像出力
+    - デプスはEXR形式で正規化なし
+    - レンダリング後、*step1-panorama-rendering* 内にフォルダを分けて画像を配置
+## ビューア
+- 以下バッチファイルを実行
 ```
-run.bat
+viewer.bat
 ```
+
+- 実行するとビューワの初期化のため, 以下の3つのパラメータの設定を要求
+    - ビューワウィンドウの幅サイズ(デフォルト: 1920)
+    - ビューワウィンドウの横サイズ(デフォルト: 1080)
+    - 入力色画像のパス(デフォルト初期値workflow/step1-panorama-rendering/output_color/*.png)
+- すべてエンターキーを押すとデフォルト値で初期化
+
+### ビューアで使用可能なショートカットキー
+- 'f': フィルタの指定（デフォルト: none）  
+    - none→hexagonal→hexagonal_gaussian→hexagonal_depth_gaussian→noneの順で切り替わる
+    - none: フィルター無し
+    - hexagonal: 六角形描画
+    - hexagonal_gaussian: ウィンドウ全体で同一の窓によるブラー処理+六角形描画
+    - hexagonal_depth_gaussian: 深度値や個眼間距離などを考慮した局所的な窓によるブラー処理+六角形描画
+- 'x': デバッグモードの有効化/無効化
+- 'z': 表示対象の切り替え(color↔depth)
+- '1': 個眼間距離を0.1°減らす
+- '2': 個眼間距離を0.1°増やす
+- '3': 個眼の個数を1個減らす
+- '4': 個眼の個数を1個増やす
+- '5': 個眼の角度を1°減らす
+- '6': 個眼の角度を1°増やす
+- 'w': カメラの視線ベクトルを3次元球座標系で表示したときの方位角(偏角)を5°増やす
+- 's': カメラの視線ベクトルを3次元球座標系で表示したときの方位角(偏角)を5°減らす
+- 'a': カメラの視線ベクトルを3次元球座標系で表示したときの極角(天頂角)を10°増やす
+- 'd': カメラの視線ベクトルを3次元球座標系で表示したときの極角(天頂角)を10°減らす
+- 'b': ブラーサイズを変更(1→2→3...→50→1の順で切り替わる)
+- '[': ビューワの対象とする入力画像を1フレーム前のものに切り替える
+- ']': ビューワの対象とする入力画像を1フレーム後のものに切り替える
+- '{': ビューワの対象とする入力画像を10フレーム後のものに切り替える
+- '}': ビューワの対象とする入力画像を10フレーム前のものに切り替える
+- 'ESC': ビューワを終了
+
+## 連番画像出力
+- 以下バッチファイルを実行
+```
+image_batch_generator.bat
+```
+- 設定値で最終フレームまで画像を生成
+
+# セッティングファイルのフォーマット
+TBD
