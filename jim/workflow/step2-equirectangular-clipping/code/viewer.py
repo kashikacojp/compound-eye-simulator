@@ -31,8 +31,8 @@ def create_viewer(output_width, output_height, image_format):
     depth_files = sorted(glob.glob(depth_format))
 
     settings = {
-        'interommatidial_angle': 5,  # 個眼間角度の初期値
-        'ommatidium_angle': 5,  # 個眼視野角の初期値
+        'interommatidial_angle': 1.0,  # 個眼間角度の初期値
+        'ommatidium_angle': 1.5,  # 個眼視野角の初期値
         'ommatidium_count': 18,  # 個眼個数の初期値
         'theta': 0,
         'phi': 0,
@@ -182,11 +182,11 @@ def create_viewer(output_width, output_height, image_format):
             print_info(f"Key: ] - Next image, Index: {current_image_index}")
             update_view()
         elif key == ord('}'):  # Shift+]
-            current_image_index = min(current_image_index + 10, len(image_files) - 1)
+            current_image_index = (current_image_index + 10) % len(image_files)
             print_info(f"Key: Shift+] - Forward 10 frames, Index: {current_image_index}")
             update_view()
         elif key == ord('{'):  # Shift+[
-            current_image_index = max(current_image_index - 10, 0)
+            current_image_index = (current_image_index - 10) % len(image_files)
             print_info(f"Key: Shift+[ - Backward 10 frames, Index: {current_image_index}")
             update_view()
         elif key == 27:  # ESCキー
