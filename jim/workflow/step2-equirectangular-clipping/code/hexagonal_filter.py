@@ -95,7 +95,8 @@ def hexagonal_depth_gaussian_filter(image, depth_image, ommatidium_count, max_fi
         if 0 <= center_x < width and 0 <= center_y < height:
             # Depthに基づいてfilter_sizeを計算
             depth_value = depth_image[center_y, center_x]
-            depth_ratio = (depth_value - depth_min) / (depth_max - depth_min)
+            depth_value = np.clip(depth_value, 0, 100.0)
+            depth_ratio = depth_value / 100.0
             filter_size = max(int(depth_ratio * max_filter_size), 1)
 
             # ガウシアンカーネルを作成
