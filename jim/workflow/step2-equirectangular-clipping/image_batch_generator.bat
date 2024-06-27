@@ -1,0 +1,1 @@
+pipenv run python code\image_batch_generator.py
