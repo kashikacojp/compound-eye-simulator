@@ -1,2 +1,0 @@
-CALL setup.bat
-CALL python ./lib/main.py -s ./Flower/flower_near.blend -i ./Flower/symmetrical_garden_02_4k.hdr -o ./output --skip-render true --clip-center 0.0 0.0 --ommatidia-delta 2.0 --ommatidia-count 15 --ommatidia-fov=30 --aspect 1.0

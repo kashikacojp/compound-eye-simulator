@@ -1,7 +1,0 @@
-output_color/
-output_depth/
-.venv/
-thirdparty/
-*.blend1
-*.mp4
-*.png
