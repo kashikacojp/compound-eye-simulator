@@ -8,6 +8,8 @@ import OpenEXR
 import Imath
 import array
 import time
+import argparse
+import tomllib
 
 def load_exr_depth(filename):
     file = OpenEXR.InputFile(filename)
@@ -20,7 +22,11 @@ def load_exr_depth(filename):
 
     return depth_image
 
-def create_viewer(output_width, output_height, image_format):
+def create_viewer(settings):
+    output_width = settings['output_width']
+    output_height = settings['output_height']
+    image_format = settings['image_format']
+    
     # 画像の読み込み
     image_files = sorted(glob.glob(image_format))
     current_image_index = 0
@@ -29,18 +35,6 @@ def create_viewer(output_width, output_height, image_format):
     # Depthファイルのパスを生成
     depth_format = image_format.replace('output_color', 'output_depth').replace('.png', '.exr')
     depth_files = sorted(glob.glob(depth_format))
-
-    settings = {
-        'interommatidial_angle': 1.5,  # 個眼間角度の初期値
-        'ommatidium_angle': 15,  # 個眼視野角の初期値
-        'ommatidium_count': 25,  # 個眼個数の初期値
-        'theta': 0,
-        'phi': 0,
-        'filter': 'hexagonal_depth_gaussian',  # フィルタの初期設定
-        'view_mode': 'color',  # 表示モードの初期設定
-        'debug_mode': False,  # デバッグモードの初期設定
-        'blur_size': 30  # ブラーサイズの初期値
-    }
 
     cv2.namedWindow('360 Viewer', cv2.WINDOW_NORMAL)
     cv2.resizeWindow('360 Viewer', output_width, output_height)  # ウィンドウサイズを設定
@@ -204,15 +198,55 @@ def get_input_with_default(prompt, default):
     return int(user_input) if user_input else default
 
 if __name__ == "__main__":
-    # デフォルトの解像度を設定
-    default_width = 1920
-    default_height = 1080
-
-    # 出力解像度を設定（デフォルト値付き）
-    output_width = get_input_with_default("Enter output width", default_width)
-    output_height = get_input_with_default("Enter output height", default_height)
-    image_format = get_input_with_default("Enter image format (e.g., 'images/*.png'): ", '../step1-panorama-rendering/output_color/*.png')
+    # argparserの設定
+    parser = argparse.ArgumentParser(description='360 Viewer for compound eye simulator')
+    prompt = "TOML settings file (e.g., 'settings/*.toml'): "
+    default = './settings/settings.toml'
+    parser.add_argument('-f','--file', type=str, default=default, help=f"{prompt} (default: {default}): ")
+    args = parser.parse_args()
+    with open(args.file,mode='rb') as file:
+        if not file:
+            print(f"Error: Could not open file {args.file}")
+            exit()
+        settings = tomllib.load(file)
+    # デフォルト値の設定
+    if not 'image_format' in settings:
+        print("Warning: 'image_format' not found in settings. Using default value '../step1-panorama-rendering/output_color/*.png'.")
+        settings['image_format'] = '../step1-panorama-rendering/output_color/*.png' 
+    if not 'output_width' in settings: 
+        print("Warning: 'output_width' not found in settings. Using default value 1920.")
+        settings['output_width'] = 1920
+    if not 'output_height' in settings:
+        print("Warning: 'output_height' not found in settings. Using default value 1080.")
+        settings ['output_height'] = 1080
+    if not 'interommatidial_angle' in settings:
+        settings['interommatidial_angle'] = 1.5
+    if not 'ommatidium_angle' in settings:
+        print("Warning: 'ommatidium_angle' not found in settings. Using default value 15.")
+        settings['ommatidium_angle'] = 15
+    if not 'ommatidium_count' in settings:
+        print("Warning: 'ommatidium_count' not found in settings. Using default value 25.")
+        settings['ommatidium_count'] = 25
+    if not 'theta' in settings:
+        print ("Warning: 'theta' not found in settings. Using default value 0.")
+        settings['theta'] = 0
+    if not 'phi' in settings:
+        print ("Warning: 'phi' not found in settings. Using default value 0.")
+        settings['phi'] = 0
+    if not 'filter' in settings:
+        print ("Warning: 'filter' not found in settings. Using default value 'hexagonal_depth_gaussian'.")
+        settings['filter'] = 'hexagonal_depth_gaussian'
+    if not 'view_mode' in settings:
+        print( "Warning: 'view_mode' not found in settings. Using default value 'color'.")
+        settings['view_mode'] = 'color'
+    if not 'debug_mode' in settings:
+        print ("Warning: 'debug_mode' not found in settings. Using default value False.")
+        settings['debug_mode'] = False
+    if not 'blur_size' in settings:
+        print ("Warning: 'blur_size' not found in settings. Using default value 30.")
+        settings['blur_size'] = 30
     
-    final_settings = create_viewer(output_width, output_height, image_format)
+    # ビューアーの作成
+    final_settings = create_viewer(settings)
 
     print("Final settings:", final_settings)

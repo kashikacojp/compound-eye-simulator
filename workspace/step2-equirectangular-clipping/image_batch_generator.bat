@@ -1,1 +1,1 @@
-pipenv run python code\image_batch_generator.py
+pipenv run python code\image_batch_generator.py -f .\settings/settings.toml
