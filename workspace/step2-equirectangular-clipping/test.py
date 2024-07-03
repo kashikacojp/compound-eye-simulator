@@ -61,6 +61,6 @@ for file_path in file_paths:
             # SET ffmpeg=..\thirdparty\ffmpeg-7.0.1-essentials_build\bin\ffmpeg.exe
             # %ffmpeg% -r 30 -i output_hexagonal_depth_gaussian\Image%%04d_hexagonal_depth_gaussian.png -c:v libx264 -pix_fmt yuv420p output_hexagonal_depth_gaussian.mp4
             ffmpeg = "..\\thirdparty\\ffmpeg-7.0.1-essentials_build\\bin\\ffmpeg.exe"
-            cmd = "{} -r 30 -i {}\\Image%04d_{}.png -c:v libx264 -pix_fmt yuv420p {}_{}.mp4".format(ffmpeg, cur_outputpath, mode,new_directory+ "/output", mode)
+            cmd = "{} -y -r 30 -i {}\\Image%04d_{}.png -c:v libx264 -pix_fmt yuv420p {}_{}.mp4".format(ffmpeg, cur_outputpath, mode,new_directory+ "/output", mode)
             print (cmd)
             os.system(cmd)
