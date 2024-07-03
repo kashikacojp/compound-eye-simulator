@@ -71,12 +71,14 @@ def update_view_process(current_image_index,image_files,depth_files,settings, im
         start = time.perf_counter() # 処理時間計測
         # カレントディレクトリを取得
         cur_path = os.getcwd()
+        # suffixはdebug_modeがTrueの場合は'_debug'、それ以外はfilter名
+        suffix = 'debug' if settings['debug_mode'] else settings['filter']
         # 出力フォルダ('/output_'+settings['filter'])が存在しない場合は作成
-        if not os.path.exists(cur_path + '/output_'+settings['filter']):
-            os.makedirs(cur_path + '/output_'+settings['filter'])
+        out_path = cur_path + '/output_'+suffix
+        if not os.path.exists(out_path):
+            os.makedirs(out_path)
         # 出力ファイル名は,入力ファイル名(拡張子は外す)の末尾に'_'+settings['filter']を付加
-        out_path = cur_path + '/output_'+settings['filter']
-        out_filepath = out_path + '/' + os.path.basename(image_files[current_image_index]).split('.')[0] + '_' + settings['filter'] + '.png'
+        out_filepath = out_path + '/' + os.path.basename(image_files[current_image_index]).split('.')[0] + '_'+suffix + '.png'
         if settings['view_mode'] == 'color':
             cv2.imwrite(out_filepath, result_color)
         else:
