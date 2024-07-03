@@ -1,0 +1,12 @@
+output_width= 1920
+output_height= 1080
+image_format= "../step1-panorama-rendering/output_color/*.png"
+interommatidial_angle= 1.5
+ommatidium_angle= 1.5
+ommatidium_count= 20
+theta= 0
+phi= 0
+filter = "none"
+view_mode= "color"
+debug_mode = false
+blur_size = 60
