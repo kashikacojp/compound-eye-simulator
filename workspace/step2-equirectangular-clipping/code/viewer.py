@@ -39,7 +39,7 @@ def create_viewer(output_width, output_height, image_format):
         'filter': 'hexagonal_depth_gaussian',  # フィルタの初期設定
         'view_mode': 'color',  # 表示モードの初期設定
         'debug_mode': False,  # デバッグモードの初期設定
-        'blur_size': 30  # ブラーサイズの初期値
+        'blur_size': 60  # ブラーサイズの初期値
     }
 
     cv2.namedWindow('360 Viewer', cv2.WINDOW_NORMAL)

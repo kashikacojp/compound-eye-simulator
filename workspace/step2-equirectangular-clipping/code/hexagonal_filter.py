@@ -156,5 +156,6 @@ def apply_uniform_blur(image, blur_size):
     if blur_size % 2 == 0:
         blur_size += 1
     
-    kernel = np.ones((blur_size, blur_size), np.float32) / (blur_size * blur_size)
-    return cv2.filter2D(image, -1, kernel)
+    # kernel = np.ones((blur_size, blur_size), np.float32) / (blur_size * blur_size)
+    #return cv2.filter2D(image, -1, kernel)
+    return cv2.GaussianBlur(image, (blur_size, blur_size), 0)
