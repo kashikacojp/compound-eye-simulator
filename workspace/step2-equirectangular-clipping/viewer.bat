@@ -1,1 +1,1 @@
-pipenv run python code\viewer.py -f .\settings/settings1.toml
+pipenv run python code\viewer.py -f .\settings/settings.toml
