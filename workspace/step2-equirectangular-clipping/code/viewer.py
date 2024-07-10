@@ -29,8 +29,8 @@ def create_viewer(settings):
 
     def update_view():
         nonlocal panorama
-        panorama = update_view_process(current_image_index, image_files, depth_files, settings, False)
-
+        (tmp_panorama,_) = update_view_process(current_image_index, image_files, depth_files, settings, False,True)
+        panorama = tmp_panorama
     def print_info(message):
         print(message)
 
@@ -40,7 +40,6 @@ def create_viewer(settings):
 
     while True:
         key = cv2.waitKey(1) & 0xFF  # キー入力を待機
-
         if key == ord('f'):
             if settings['filter'] == 'none':
                 settings['filter'] = 'hexagonal'

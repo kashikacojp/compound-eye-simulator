@@ -18,7 +18,7 @@ def load_exr_depth(filename):
 
     return depth_image
 
-def update_view_process(current_image_index,image_files,depth_files,settings, image_write = True):
+def update_view_process(current_image_index,image_files,depth_files,settings, image_write = True, image_show = False):
     output_width = settings['output_width']
     output_height = settings['output_height']
     start_all = time.perf_counter() # 処理時間計測
@@ -67,6 +67,7 @@ def update_view_process(current_image_index,image_files,depth_files,settings, im
     result_depth_vis = cv2.normalize(result_depth, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
     end = time.perf_counter() # 処理時間計測
     print ('depth_visualization: {:.2f} ms'.format((end-start)*1000))
+    result_image = None
     if image_write:
         start = time.perf_counter() # 処理時間計測
         # カレントディレクトリを取得
@@ -78,21 +79,27 @@ def update_view_process(current_image_index,image_files,depth_files,settings, im
         out_path = cur_path + '/output_'+settings['filter']
         out_filepath = out_path + '/' + os.path.basename(image_files[current_image_index]).split('.')[0] + '_' + settings['filter'] + '.png'
         if settings['view_mode'] == 'color':
-            cv2.imwrite(out_filepath, result_color)
+            result_image = result_color
         else:
-            cv2.imwrite(out_filepath, result_depth_vis)
+            result_image = result_depth_vis
+        cv2.imwrite(out_filepath, result_image)
         end=time.perf_counter()#処理時間計測
         print('imwrite:{:.2f}ms'.format((end-start)*1000))
-    else:
+    elif image_show:
         start = time.perf_counter() # 処理時間計測
         # 現在の表示モードに応じて表示する画像を選択
         if settings['view_mode'] == 'color':
-            cv2.imshow('360 Viewer', result_color)
+            result_image = result_color
         else:
-            cv2.imshow('360Viewer', result_depth_vis)
+            result_image = result_depth_vis
+        cv2.imshow('360 Viewer', result_image)
         end=time.perf_counter()#処理時間計測
         print('imshow:{:.2f}ms'.format((end-start)*1000))
-    
+    else:
+        if settings['view_mode'] == 'color':
+            result_image = result_color
+        else:
+            result_image = result_depth_vis
     end_all=time.perf_counter()#処理時間計測
     print('update_view:{:.2f}ms'.format((end_all-start_all)*1000))
-    return panorama
+    return (panorama, result_image)
