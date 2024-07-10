@@ -210,11 +210,15 @@ class UIViewer:
                 should_update = True
         else:
             if self.settings['filter'] != new_filter:
+                self.settings['view_mode'] = 'color'
                 self.settings['filter'] = new_filter
                 self.settings['debug_mode'] = False
                 should_update = True
             elif self.settings['debug_mode']:
                 self.settings['debug_mode'] = False
+                should_update = True
+            elif self.settings['view_mode'] != 'color':
+                self.settings['view_mode'] = 'color'
                 should_update = True
 
         if should_update:
@@ -267,8 +271,6 @@ class UIViewer:
         if cur_width != self.settings['output_width'] or cur_height != self.settings['output_height']:
             if self.pre_setup:
                 return
-            # self.settings['output_width']  = cur_width
-            # self.settings['output_height'] = cur_height
             print (f"表示画面サイズが変更されました: {cur_width}x{cur_height}")
             self.screen_width  = cur_width
             self.screen_height = cur_height
