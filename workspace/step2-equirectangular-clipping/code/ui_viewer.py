@@ -252,9 +252,13 @@ class UIViewer:
     def on_save_view_image_click(self):
         root = tk.Tk()
         root.withdraw()
+        #image_[phi]_[theta]_[フレーム番号]_[YYYYMMDDhhmmss].png　
+        default_filename = f"image_{self.settings['phi']}_{self.settings['theta']}_{self.current_image_index}_{time.strftime('%Y%m%d%H%M%S')}.png"
         file_path = filedialog.asksaveasfilename(
             defaultextension=".png",
             filetypes=[("PNG files", "*.png"), ("JPEG files", "*.jpg"), ("All files", "*.*")],
+            initialdir=os.getcwd(),
+            initialfile=default_filename
         )
         if not file_path:
             print("保存がキャンセルされました。")
@@ -311,11 +315,19 @@ class UIViewer:
         # scriptのworking directoryを取得
         working_directory = os.getcwd()
         # 保存ファイル名は, settings_YYYYMMDDHHMMSS.toml
-        save_file_name = working_directory+f"/settings_{time.strftime('%Y%m%d%H%M%S')}.toml"
-        # settingsを保存
-        with open(save_file_name, 'wb') as file:
-            tomli_w.dump(self.settings, file)
-            print(f"設定ファイルを保存しました: {save_file_name.split('/')[-1]}")
+        default_filename = f"settings_{time.strftime('%Y%m%d%H%M%S')}.toml"
+        file_path = filedialog.asksaveasfilename(
+            defaultextension=".toml",
+            filetypes=[("TOML files", "*.toml"), ("All files", "*.*")],
+            initialdir=working_directory,
+            initialfile=default_filename
+        )
+        if not file_path:
+            print("保存がキャンセルされました。")
+            return
+        with open(file_path, 'wb') as f:
+            tomli_w.dump(self.settings, f)
+            print("設定ファイルを保存しました: ", file_path.split('/')[-1])
 
     def update_view(self):
         (tmp_panorama,tmp_view_image) = update_view_process(self.current_image_index, self.image_files, self.depth_files, self.settings, False,False)
