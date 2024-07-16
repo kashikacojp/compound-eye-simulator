@@ -109,6 +109,9 @@ class UIViewer:
         self.ui_input_ommatidium_count      = tk.StringVar()
         self.ui_input_filter                = tk.StringVar()
 
+        # titleは現在のフレーム番号/総フレーム数
+        self.update_title()
+
         self.setup_ui()
 
     def setup_ui(self):
@@ -283,6 +286,7 @@ class UIViewer:
         self.current_image_index = (self.current_image_index + 1) % len(self.image_files)
         print(f"event.char: ] - Next image, Index: {self.current_image_index}")
         self.update_view()
+        self.update_title()
 
     def on_prev_1frame_image(self):
         if self.current_image_index == 0:
@@ -290,11 +294,13 @@ class UIViewer:
         self.current_image_index = (self.current_image_index - 1) % len(self.image_files)
         print(f"event.char: [ - Previous image, Index: {self.current_image_index}")
         self.update_view()
+        self.update_title()
 
     def on_next_10frame_image(self):
         self.current_image_index = (self.current_image_index + 10) % len(self.image_files)
         print(f"event.char: Shift+] - Forward 10 frames, Index: {self.current_image_index}")
         self.update_view()
+        self.update_title()
     
     def on_prev_10frame_image(self):
         if self.current_image_index < 10:
@@ -302,6 +308,7 @@ class UIViewer:
         self.current_image_index = (self.current_image_index - 10) % len(self.image_files)
         print(f"event.char: Shift+[ - Backward 10 frames, Index: {self.current_image_index}")
         self.update_view()
+        self.update_title()
 
     def on_esc_key(self, event):
         print("ESCキーが押されました, 終了します")
@@ -331,6 +338,9 @@ class UIViewer:
         self.image_tk    = ImageTk.PhotoImage(self.image_pil)
         self.canvas.itemconfig(self.imageItemID, image=self.image_tk)
 
+    def update_title(self):
+        # titleは現在のフレーム番号/総フレーム数
+        self.master.title(f"{self.current_image_index}/{len(self.image_files)}")
 
 if __name__ == "__main__":
     root = tk.Tk()
