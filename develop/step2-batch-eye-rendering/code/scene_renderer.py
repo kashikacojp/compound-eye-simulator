@@ -189,7 +189,7 @@ class SceneRenderer:
         # 回転後のworld_z_axisを取得
         world_z_axis    = view_to_world_matrix @ local_z_axis
         # 位置を補正
-        location = base_location + base_radius * rotated_local_z_axis
+        location = base_location + base_radius * world_z_axis
         # rotation_matrixをworld座標系に変換
         rotation_matrix = view_to_world_matrix @ rotation_matrix
         # カメラの姿勢として設定
