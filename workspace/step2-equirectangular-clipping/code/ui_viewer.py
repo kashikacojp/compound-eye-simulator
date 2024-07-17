@@ -21,9 +21,9 @@ class UIViewer:
         default = './settings/settings.toml'
         parser.add_argument('-s','--setting', type=str, default=default, help=f"{prompt} (default: {default}): ")
         args = parser.parse_args()
-        with open(args.file,mode='rb') as file:
+        with open(args.setting,mode='rb') as file:
             if not file:
-                print(f"Error: Could not open file {args.file}")
+                print(f"Error: Could not open file {args.setting}")
                 exit()
             self.settings = tomllib.load(file)
         # デフォルト値の設定
@@ -62,6 +62,9 @@ class UIViewer:
         if not 'blur_size' in self.settings:
             print ("Warning: 'blur_size' not found in settings. Using default value 30.")
             self.settings['blur_size'] = 30
+        if not 'frame' in self.settings:
+            print ("Warning: 'frame' not found in settings. Using default value 0.")
+            self.settings['frame'] = 0
 
         self.pre_setup  = True
         self.view_image = None
@@ -69,8 +72,13 @@ class UIViewer:
         image_format  = self.settings['image_format']  
         # 画像の読み込み
         self.image_files = sorted(glob.glob(image_format))
-        self.current_image_index = 0
-        self.panorama = cv2.imread(self.image_files[self.current_image_index])
+        if len(self.image_files) == 0:
+            print(f"No images found: {image_format}")
+            sys.exit(1)
+        if len(self.image_files) <= int(self.settings['frame']):
+            print(f"Num images not matched with current frame number: {len(self.image_files)} <= {self.settings['frame']}")
+            self.settings['frame'] = 0
+        self.panorama = cv2.imread(self.image_files[self.settings['frame']])
 
         # Depthファイルのパスを生成
         depth_format = image_format.replace('output_color', 'output_depth').replace('.png', '.exr')
@@ -283,7 +291,7 @@ class UIViewer:
         root = tk.Tk()
         root.withdraw()
         #image_[phi]_[theta]_[フレーム番号]_[YYYYMMDDhhmmss].png　
-        default_filename = f"image_{self.settings['phi']}_{self.settings['theta']}_{self.current_image_index}_{time.strftime('%Y%m%d%H%M%S')}.png"
+        default_filename = f"image_{self.settings['phi']}_{self.settings['theta']}_{self.settings['frame']}_{time.strftime('%Y%m%d%H%M%S')}.png"
         file_path = filedialog.asksaveasfilename(
             defaultextension=".png",
             filetypes=[("PNG files", "*.png"), ("JPEG files", "*.jpg"), ("All files", "*.*")],
@@ -314,30 +322,30 @@ class UIViewer:
                 self.pre_setup = False
 
     def on_next_1frame_image(self):
-        self.current_image_index = (self.current_image_index + 1) % len(self.image_files)
-        # print(f"event.char: ] - Next image, Index: {self.current_image_index}")
+        self.settings['frame'] = (self.settings['frame'] + 1) % len(self.image_files)
+        # print(f"event.char: ] - Next image, Index: {self.settings['frame']}")
         self.update_view()
         self.update_title()
 
     def on_prev_1frame_image(self):
-        if self.current_image_index == 0:
+        if self.settings['frame'] == 0:
             return
-        self.current_image_index = (self.current_image_index - 1) % len(self.image_files)
-        # print(f"event.char: [ - Previous image, Index: {self.current_image_index}")
+        self.settings['frame'] = (self.settings['frame'] - 1) % len(self.image_files)
+        # print(f"event.char: [ - Previous image, Index: {self.settings['frame']}")
         self.update_view()
         self.update_title()
 
     def on_next_10frame_image(self):
-        self.current_image_index = (self.current_image_index + 10) % len(self.image_files)
-        # print(f"event.char: Shift+] - Forward 10 frames, Index: {self.current_image_index}")
+        self.settings['frame'] = (self.settings['frame'] + 10) % len(self.image_files)
+        # print(f"event.char: Shift+] - Forward 10 frames, Index: {self.settings['frame']}")
         self.update_view()
         self.update_title()
     
     def on_prev_10frame_image(self):
-        if self.current_image_index < 10:
+        if self.settings['frame'] < 10:
             return
-        self.current_image_index = (self.current_image_index - 10) % len(self.image_files)
-        # print(f"event.char: Shift+[ - Backward 10 frames, Index: {self.current_image_index}")
+        self.settings['frame'] = (self.settings['frame'] - 10) % len(self.image_files)
+        # print(f"event.char: Shift+[ - Backward 10 frames, Index: {self.settings['frame']}")
         self.update_view()
         self.update_title()
 
@@ -364,7 +372,7 @@ class UIViewer:
             print("設定ファイルを保存しました: ", file_path.split('/')[-1])
 
     def update_view(self):
-        (tmp_panorama,tmp_view_image) = update_view_process(self.current_image_index, self.image_files, self.depth_files, self.settings, False,False,True)
+        (tmp_panorama,tmp_view_image) = update_view_process(self.settings['frame'], self.image_files, self.depth_files, self.settings, False,False,True)
         self.panorama    = tmp_panorama
         self.view_image  = tmp_view_image 
         image_bgr        = self.view_image
@@ -379,7 +387,7 @@ class UIViewer:
 
     def update_title(self):
         # titleは現在のフレーム番号/総フレーム数
-        self.master.title(f"{self.current_image_index}/{len(self.image_files)}")
+        self.master.title(f"{self.settings['frame']}/{len(self.image_files)}")
 
 if __name__ == "__main__":
     root = tk.Tk()
