@@ -1,1 +1,2 @@
-pipenv run python code\ui_viewer.py --setting .\settings/settings.toml  
+pipenv run python code\ui_viewer.py --setting .\settings/settings.toml
+pause
