@@ -328,9 +328,9 @@ class UIViewer:
         self.update_title()
 
     def on_prev_1frame_image(self):
-        if self.settings['frame'] == 0:
-            return
-        self.settings['frame'] = (self.settings['frame'] - 1) % len(self.image_files)
+        self.settings['frame'] = self.settings['frame'] - 1
+        if self.settings['frame'] < 0:
+            self.settings['frame'] = len(self.image_files) + self.settings['frame'] # 'frame' is negative so add it to the total number of images
         # print(f"event.char: [ - Previous image, Index: {self.settings['frame']}")
         self.update_view()
         self.update_title()
@@ -342,9 +342,9 @@ class UIViewer:
         self.update_title()
     
     def on_prev_10frame_image(self):
-        if self.settings['frame'] < 10:
-            return
-        self.settings['frame'] = (self.settings['frame'] - 10) % len(self.image_files)
+        self.settings['frame'] = self.settings['frame'] - 10
+        if self.settings['frame'] < 0:
+            self.settings['frame'] = len(self.image_files) + self.settings['frame'] # 'frame' is negative so add it to the total number of images
         # print(f"event.char: Shift+[ - Backward 10 frames, Index: {self.settings['frame']}")
         self.update_view()
         self.update_title()
