@@ -19,8 +19,8 @@ def create_viewer(settings):
 
     def update_view():
         nonlocal panorama
-        panorama = update_view_process(current_image_index, image_files, depth_files, settings,True)
-
+        (tmp_panorama,_)  = update_view_process(current_image_index, image_files, depth_files, settings,True,False)
+        panorama = tmp_panorama
     for i in range(len(image_files)):
         current_image_index = i
         print(f"Index: {i}")

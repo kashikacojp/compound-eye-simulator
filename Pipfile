@@ -10,6 +10,7 @@ bpy = "*"
 matplotlib = "*"
 openexr = "*"
 numba = "*"
+tomli-w = "*"
 
 [dev-packages]
 
