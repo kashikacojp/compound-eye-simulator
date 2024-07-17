@@ -19,7 +19,7 @@ class UIViewer:
         parser = argparse.ArgumentParser(description='360 Viewer for compound eye simulator')
         prompt = "TOML settings file (e.g., 'settings/*.toml'): "
         default = './settings/settings.toml'
-        parser.add_argument('-f','--file', type=str, default=default, help=f"{prompt} (default: {default}): ")
+        parser.add_argument('-s','--setting', type=str, default=default, help=f"{prompt} (default: {default}): ")
         args = parser.parse_args()
         with open(args.file,mode='rb') as file:
             if not file:
