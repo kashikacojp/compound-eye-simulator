@@ -134,8 +134,9 @@ class UIViewer:
         ommatidium_count_entry.insert (0, self.settings['ommatidium_count'])
 
         filter_label = tk.Label(self.ui_frame, text="フィルタ切り替え")
-        filter_combobox = ttk.Combobox(self.ui_frame, values=["none","hexagonal", "hexagonal_gaussian", "hexagonal_depth_gaussian","debug_color","debug_depth"], textvariable=self.ui_input_filter)
-        filter_combobox.set (self.settings['filter'])
+        #filter_combobox = ttk.Combobox(self.ui_frame, values=["none","hexagonal", "hexagonal_gaussian", "hexagonal_depth_gaussian","debug_color","debug_depth"], textvariable=self.ui_input_filter)
+        filter_combobox = ttk.Combobox(self.ui_frame, values=[self.convert_filter_name_reverse("none"),self.convert_filter_name_reverse("hexagonal"), self.convert_filter_name_reverse("hexagonal_depth_gaussian")], textvariable=self.ui_input_filter)
+        filter_combobox.set (self.convert_filter_name_reverse(self.settings['filter']))
         filter_label.grid(row=6, column=0, columnspan=3)
         filter_combobox.grid(row=7, column=0, columnspan=3)
 
@@ -212,6 +213,12 @@ class UIViewer:
                 self.settings['view_mode'] = 'depth'
                 should_update = True
         else:
+            new_filter = self.convert_filter_name(new_filter)
+
+            if new_filter == "":
+                print("フィルタが不正です")
+                return
+
             if self.settings['filter'] != new_filter:
                 self.settings['view_mode'] = 'color'
                 self.settings['filter'] = new_filter
@@ -231,6 +238,26 @@ class UIViewer:
             print("個眼個数: ", self.ui_input_ommatidium_count.get())
             print("フィルタ: ", self.ui_input_filter.get())
             self.update_view()
+
+    def convert_filter_name(self, value):
+        new_str = ""
+        if value == "入力画像":
+            new_str = "none"            
+        elif value == "平均フィルタ":
+            new_str = "hexagonal"
+        elif value == "深度+ガウシアンフィルタ":
+            new_str = "hexagonal_depth_gaussian"           
+        return new_str
+
+    def convert_filter_name_reverse(self, value):
+        new_str = ""
+        if value == "none":
+            new_str = "入力画像"
+        elif value == "hexagonal":
+            new_str = "平均フィルタ"
+        elif value == "hexagonal_depth_gaussian":
+            new_str = "深度+ガウシアンフィルタ"
+        return new_str
 
     def on_up_click(self):
         self.settings['phi'] = min(self.settings['phi'] + 5, 90)
