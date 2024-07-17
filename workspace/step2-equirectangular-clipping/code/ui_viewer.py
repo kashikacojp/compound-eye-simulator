@@ -179,7 +179,7 @@ class UIViewer:
     def run(self):
         self.update_view()
         self.master.mainloop()
-        self.save_settings()
+        print(tomli_w.dumps(self.settings))
 
     def on_apply_click(self):
         new_interommatidial_angle = float(self.ui_input_interommatidial_angle.get())
