@@ -81,14 +81,15 @@ def hexagonal_gaussian_filter(image, ommatidium_count, filter_size):
 
     return result
 
-def hexagonal_depth_gaussian_filter(image, depth_image, ommatidium_count, max_filter_size):
+def hexagonal_depth_gaussian_filter(image, depth_image, ommatidium_count, max_filter_size, show_debug = False):
     height, width = image.shape[:2]
     result = np.zeros_like(image)
 
     # Depthの最小値と最大値を取得
     depth_min = np.min(depth_image)
     depth_max = np.max(depth_image)
-    print("DEBUG: hexagonal_depth_gaussian_filter: depth_min = {}, depth_max = {}", depth_min, depth_max)
+    if show_debug:
+        print("DEBUG: hexagonal_depth_gaussian_filter: depth_min = {}, depth_max = {}", depth_min, depth_max)
 
     for center_x, center_y, hex_size, hex_points, mask, _ in get_hexagon_data(image, ommatidium_count, max_filter_size):
         # 中心座標が画像の範囲内にあることを確認

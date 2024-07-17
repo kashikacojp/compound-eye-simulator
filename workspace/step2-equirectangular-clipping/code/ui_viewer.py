@@ -234,22 +234,22 @@ class UIViewer:
 
     def on_up_click(self):
         self.settings['phi'] = min(self.settings['phi'] + 5, 90)
-        print(f"event.char: W - Rotate up, Phi: {self.settings['phi']}")
+        #print(f"event.char: W - Rotate up, Phi: {self.settings['phi']}")
         self.update_view()
 
     def on_down_click(self):
         self.settings['phi'] = max(self.settings['phi'] - 5, -90)
-        print(f"event.char: S - Rotate down, Phi: {self.settings['phi']}")
+        #print(f"event.char: S - Rotate down, Phi: {self.settings['phi']}")
         self.update_view()
 
     def on_left_click(self):
         self.settings['theta'] = (self.settings['theta'] + 10) % 360
-        print(f"event.char: A - Rotate left, Theta: {self.settings['theta']}")
+        #print(f"event.char: A - Rotate left, Theta: {self.settings['theta']}")
         self.update_view()
 
     def on_right_click(self):
         self.settings['theta'] = (self.settings['theta'] - 10) % 360
-        print(f"event.char: D - Rotate right, Theta: {self.settings['theta']}")
+        #print(f"event.char: D - Rotate right, Theta: {self.settings['theta']}")
         self.update_view()
 
     def on_save_view_image_click(self):
@@ -284,7 +284,7 @@ class UIViewer:
 
     def on_next_1frame_image(self):
         self.current_image_index = (self.current_image_index + 1) % len(self.image_files)
-        print(f"event.char: ] - Next image, Index: {self.current_image_index}")
+        # print(f"event.char: ] - Next image, Index: {self.current_image_index}")
         self.update_view()
         self.update_title()
 
@@ -292,13 +292,13 @@ class UIViewer:
         if self.current_image_index == 0:
             return
         self.current_image_index = (self.current_image_index - 1) % len(self.image_files)
-        print(f"event.char: [ - Previous image, Index: {self.current_image_index}")
+        # print(f"event.char: [ - Previous image, Index: {self.current_image_index}")
         self.update_view()
         self.update_title()
 
     def on_next_10frame_image(self):
         self.current_image_index = (self.current_image_index + 10) % len(self.image_files)
-        print(f"event.char: Shift+] - Forward 10 frames, Index: {self.current_image_index}")
+        # print(f"event.char: Shift+] - Forward 10 frames, Index: {self.current_image_index}")
         self.update_view()
         self.update_title()
     
@@ -306,7 +306,7 @@ class UIViewer:
         if self.current_image_index < 10:
             return
         self.current_image_index = (self.current_image_index - 10) % len(self.image_files)
-        print(f"event.char: Shift+[ - Backward 10 frames, Index: {self.current_image_index}")
+        # print(f"event.char: Shift+[ - Backward 10 frames, Index: {self.current_image_index}")
         self.update_view()
         self.update_title()
 
@@ -325,7 +325,7 @@ class UIViewer:
             print(f"設定ファイルを保存しました: {save_file_name.split('/')[-1]}")
 
     def update_view(self):
-        (tmp_panorama,tmp_view_image) = update_view_process(self.current_image_index, self.image_files, self.depth_files, self.settings, False,False)
+        (tmp_panorama,tmp_view_image) = update_view_process(self.current_image_index, self.image_files, self.depth_files, self.settings, False,False,True)
         self.panorama    = tmp_panorama
         self.view_image  = tmp_view_image 
         image_bgr        = self.view_image
