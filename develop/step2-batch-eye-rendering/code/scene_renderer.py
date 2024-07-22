@@ -34,12 +34,12 @@ class SceneRenderer:
             output_path = current_parent_dir
         self.output_path = abspath(output_path)
         if output_color_path is None:
-           output_color_path = abspath(output_path + '/../output_color')
+           output_color_path = abspath(output_path + '/../develop/step2-batch-eye-rendering/output_color')
            if not os.path.exists(output_color_path):
                 os.makedirs(output_color_path)
         self.output_color_path = abspath(output_color_path)
         if output_depth_path is None:
-           output_depth_path = abspath(output_path + '/../output_depth')
+           output_depth_path = abspath(output_path + '/../develop/step2-batch-eye-rendering/output_depth')
            if not os.path.exists(output_depth_path):
                 os.makedirs(output_depth_path)
         self.output_depth_path = abspath(output_depth_path)
@@ -95,20 +95,18 @@ class SceneRenderer:
         else:
             print("No output_depth found in the render layer.")
             
-        node_norm_depth = scene_node_tree.nodes.new('CompositorNodeNormalize')
-        node_norm_depth.name = 'norm_depth'
         node_save_color = scene_node_tree.nodes.new('CompositorNodeOutputFile')
         node_save_color.name = 'save_color'
         node_save_color.base_path =  self.output_color_path
         node_save_color.file_slots.clear()  # 既存のスロットをクリア
         node_save_color.file_slots.new('MyOutputImage')  # 新しいスロットを追加
-        node_save_color.file_slots[0].path  = base_file_name + '_color_' 
+        node_save_color.file_slots[0].path  = base_file_name + '_' 
         node_save_depth = scene_node_tree.nodes.new('CompositorNodeOutputFile')
         node_save_depth.name = 'save_depth'
         node_save_depth.base_path =  self.output_depth_path
         node_save_depth.file_slots.clear()  # 既存のスロットをクリア
         node_save_depth.file_slots.new('MyOutputImage')  # 新しいスロットを追加
-        node_save_depth.file_slots[0].path = base_file_name + '_depth_'
+        node_save_depth.file_slots[0].path = base_file_name + '_'
         if self.output_depth_format == 'OPEN_EXR':
             node_save_depth.format.file_format = "OPEN_EXR" # default is "PNG"
             node_save_depth.format.color_mode  = "RGB"  # default is "BW"
@@ -122,8 +120,7 @@ class SceneRenderer:
 
 
         scene_node_tree.links.new(output_color,node_save_color.inputs[0])
-        scene_node_tree.links.new(output_depth,node_norm_depth.inputs[0])
-        scene_node_tree.links.new(node_norm_depth.outputs[0],node_save_depth.inputs[0])
+        scene_node_tree.links.new(output_depth,node_save_depth.inputs[0])
 
         cycles_preferences = bpy.context.preferences.addons['cycles'].preferences
         # デバイスタイプをGPUに設定
@@ -166,8 +163,6 @@ class SceneRenderer:
         # base_radius  は, カメラの位置を球面上に配置するための半径
         # base_rotationは, カメラの姿勢を決定するための基準となる回転
         # phi, thetaはそれぞれ極座標系におけるカメラの位置と姿勢を決定するための角度
-        # まずcameraのview_to_world_matrixを取得
-        view_to_world_matrix = camera.matrix_world
         # camera座標系におけるlocalな各軸を取得
         local_x_axis = Vector((1, 0, 0))
         local_y_axis = Vector((0, 1, 0))
@@ -175,25 +170,15 @@ class SceneRenderer:
         # phiの回転を適用
         # 回転軸はlocal_y_axis
         # 回転角はphi
-        rotation_matrix = Quaternion(local_y_axis, phi).to_matrix().to_4x4()
+        rotation_matrix = Quaternion(local_y_axis, -phi).to_matrix().to_4x4()
         # thetaの回転を適用
         # 回転軸はlocal_x_axis
         # 回転角はtheta
-        rotation_matrix = Quaternion(local_x_axis, theta).to_matrix().to_4x4() @ rotation_matrix
-        # 回転後のlocal_x_axisを取得
-        rotated_local_x_axis = rotation_matrix @ local_x_axis
-        # 回転後のlocal_z_axisを取得
-        rotated_local_z_axis = rotation_matrix @ local_z_axis
-        # 回転後のlocal_y_axisを取得
-        rotated_local_y_axis = rotation_matrix @ local_y_axis
-        # 回転後のworld_z_axisを取得
-        world_z_axis    = view_to_world_matrix @ local_z_axis
-        # 位置を補正
-        location = base_location + base_radius * world_z_axis
-        # rotation_matrixをworld座標系に変換
-        rotation_matrix = view_to_world_matrix @ rotation_matrix
+        rotation_matrix = Quaternion(local_x_axis, -theta).to_matrix().to_4x4() @ rotation_matrix
+
         # カメラの姿勢として設定
-        camera.matrix_world = rotation_matrix
+        camera.matrix_world =  camera.matrix_world @ rotation_matrix
+        camera.location     = camera_location
 
     def run(self):
         width = 100
@@ -230,6 +215,7 @@ class SceneRenderer:
             print ("centers not found in input_settings")
             return
         radius = 1.0
+        num_centers = len(self.input_settings['centers'])
         i = 0
         for center in self.input_settings['centers']:
             # 見つかったカメラを複製する
@@ -247,8 +233,9 @@ class SceneRenderer:
             center_phi = center_phi * 3.141592653589793 / 180.0
             center_theta = center_theta * 3.141592653589793 / 180.0
             self.rotate_camera (camera, camera_location, radius, camera_rotation, center_phi, center_theta)
-            # 出力ファイル名は, image_center_${i}.png
-            filename = base_file_name + '_center_' + str(i)
+            # 出力ファイル名は, image_${i}.png
+            # iは0から始まり, 4桁になるように0埋め
+            filename = base_file_name + '_' +  str(i).zfill(4)
             # レンダリング実行
             self.render_image(camera, width, height, samples, filename)
             i = i+1
@@ -264,10 +251,10 @@ class SceneRenderer:
 
 if __name__ == "__main__":
     input_settings = {
-    'centers': [(-6.0, -3.375), (-4.5, -3.375), (-3.0, -3.375), (-1.5, -3.375), (0.0, -3.375), (1.5, -3.375), (3.0, -3.375), (4.5, -3.375), (-5.25, -2.08125), (-3.75, -2.08125), (-2.25, -2.08125), (-0.75, -2.08125), (0.75, -2.08125), (2.25, -2.08125), (3.75, -2.08125), (5.25, -2.08125), (-6.0, -0.78125), (-4.5, -0.78125), (-3.0, -0.78125), (-1.5, -0.78125), (0.0, -0.78125), (1.5, -0.78125), (3.0, -0.78125), (4.5, -0.78125), (-5.25, 0.51875), (-3.75, 0.51875), (-2.25, 0.51875), (-0.75, 0.51875), (0.75, 0.51875), (2.25, 0.51875), (3.75, 0.51875), (5.25, 0.51875), (-6.0, 1.81875), (-4.5, 1.81875), (-3.0, 1.81875), (-1.5, 1.81875), (0.0, 1.81875), (1.5, 1.81875), (3.0, 1.81875), (4.5, 1.81875), (-5.25, 3.11875), (-3.75, 3.11875), (-2.25, 3.11875), (-0.75, 3.11875), (0.75, 3.11875), (2.25, 3.11875), (3.75, 3.11875), (5.25, 3.11875)],      
+    'centers': [(-6.0, -3.375), (-4.5, -3.375), (-3.0, -3.375), (-1.5, -3.375), (0.0, -3.375), (1.5, -3.375), (3.0, -3.375), (4.5, -3.375), (-5.25, -2.08125), (-3.75, -2.08125), (-2.25, -2.08125), (-0.75, -2.08125), (0.75, -2.08125), (2.25, -2.08125), (3.75, -2.08125), (5.25, -2.08125), (-6.0, -0.78125), (-4.5, -0.78125), (-3.0, -0.78125), (-1.5, -0.78125), (0.0, -0.78125), (1.5, -0.78125), (3.0, -0.78125), (4.5, -0.78125), (-5.25, 0.51875), (-3.75, 0.51875), (-2.25, 0.51875), (-0.75, 0.51875), (0.75, 0.51875), (2.25, 0.51875), (3.75, 0.51875), (5.25, 0.51875), (-6.0, 1.81875), (-4.5, 1.81875), (-3.0, 1.81875), (-1.5, 1.81875), (0.0, 1.81875), (1.5, 1.81875), (3.0, 1.81875), (4.5, 1.81875), (-5.25, 3.11875), (-3.75, 3.11875), (-2.25, 3.11875), (-0.75, 3.11875), (0.75, 3.11875), (2.25, 3.11875), (3.75, 3.11875), (5.25, 3.11875)],
     'theta': 0,
     'phi': 0,
-    'ommatidium_angle': 15,
+    'ommatidium_angle': 1.5,
 }
 
     renderer = SceneRenderer(output_depth_format='OPEN_EXR', input_settings=input_settings)

@@ -42,9 +42,9 @@ def calc_pixel_viewport(settings):
     return final_settings
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='360 Viewer for compound eye simulator')
+    parser = argparse.ArgumentParser(description='Calculate pixel viewport for compound eye simulator')
     prompt = "TOML settings file (e.g., 'settings/*.toml'): "
-    default = './settings/settings.toml'
+    default = '../settings/settings.toml'
     parser.add_argument('-f','--file', type=str, default=default, help=f"{prompt} (default: {default}): ")
     args = parser.parse_args()
     with open(args.file,mode='rb') as file:
@@ -54,8 +54,8 @@ if __name__ == "__main__":
         settings = tomllib.load(file)
     # デフォルト値の設定
     if not 'image_format' in settings:
-        print("Warning: 'image_format' not found in settings. Using default value '../step1-panorama-rendering/output_color/*.png'.")
-        settings['image_format'] = '../step1-panorama-rendering/output_color/*.png' 
+        print("Warning: 'image_format' not found in settings. Using default value '../step2-batch-eye-rendering/output_color/*.png'.")
+        settings['image_format'] = '../step2-batch-eye-rendering/output_color/*.png' 
     if not 'output_width' in settings: 
         print("Warning: 'output_width' not found in settings. Using default value 1920.")
         settings['output_width'] = 1920
