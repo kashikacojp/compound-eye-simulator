@@ -123,7 +123,7 @@ class UIViewer:
         self.setup_ui()
 
     def setup_ui(self):
-        interommatidial_angle_label = tk.Label(self.ui_frame, text="個眼間画角")
+        interommatidial_angle_label = tk.Label(self.ui_frame, text="個眼間角度")
         interommatidial_angle_entry = tk.Entry(self.ui_frame, textvariable=self.ui_input_interommatidial_angle)
         interommatidial_angle_label.grid(row=0, column=0, columnspan=3)
         interommatidial_angle_entry.grid(row=1, column=0, columnspan=3)
@@ -376,7 +376,7 @@ class UIViewer:
         self.update_canvas_from_pil()
 
         print("変更を適用します")
-        print("個眼間画角: ", self.ui_input_interommatidial_angle.get())
+        print("個眼間角度: ", self.ui_input_interommatidial_angle.get())
         print("個眼視野角: ", self.ui_input_ommatidium_angle.get())
         print("個眼個数: ", self.ui_input_ommatidium_count.get())
         print("フィルタ: ", self.ui_input_filter.get())
