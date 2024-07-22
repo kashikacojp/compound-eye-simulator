@@ -240,11 +240,6 @@ class UIViewer:
                 should_update = True
 
         if should_update:
-            print("変更を適用します")
-            print("個眼間画角: ", self.ui_input_interommatidial_angle.get())
-            print("個眼視野角: ", self.ui_input_ommatidium_angle.get())
-            print("個眼個数: ", self.ui_input_ommatidium_count.get())
-            print("フィルタ: ", self.ui_input_filter.get())
             self.update_view()
 
     def convert_filter_name(self, value):
@@ -379,6 +374,13 @@ class UIViewer:
         image_rgb        = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
         self.image_pil   = Image.fromarray(image_rgb)
         self.update_canvas_from_pil()
+
+        print("変更を適用します")
+        print("個眼間画角: ", self.ui_input_interommatidial_angle.get())
+        print("個眼視野角: ", self.ui_input_ommatidium_angle.get())
+        print("個眼個数: ", self.ui_input_ommatidium_count.get())
+        print("フィルタ: ", self.ui_input_filter.get())
+        print(f"視点: ({self.settings['phi']}, {self.settings['theta']})")
 
     def update_canvas_from_pil(self):
         self.image_pil   = self.image_pil.resize((self.screen_width, self.screen_height))
