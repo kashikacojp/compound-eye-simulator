@@ -98,7 +98,8 @@ def hexagonal_depth_gaussian_filter(image, depth_image, ommatidium_count, max_fi
             depth_value = depth_image[center_y, center_x]
             depth_value = np.clip(depth_value, 0, 100.0)
             depth_ratio = depth_value / 100.0
-            filter_size = max(int(depth_ratio * max_filter_size), 1)
+            depth_ratio_exp = depth_ratio ** 0.2 # exponential scaling
+            filter_size = max(int(depth_ratio_exp * max_filter_size), 1)
 
             # ガウシアンカーネルを作成
             gaussian_kernel = cv2.getGaussianKernel(filter_size, -1)
