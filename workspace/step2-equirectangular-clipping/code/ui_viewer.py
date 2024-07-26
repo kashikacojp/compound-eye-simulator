@@ -246,7 +246,8 @@ class UIViewer:
                 self.settings['view_mode'] = 'color'
                 should_update = True
 
-        should_update = self.update_blur_size(float(self.ui_blur_size.get()))
+        if self.update_blur_size(float(self.ui_blur_size.get())):
+            should_update = True
 
         if should_update:
             self.update_view()
