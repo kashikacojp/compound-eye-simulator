@@ -109,13 +109,14 @@ class UIViewer:
         self.imageItemID = self.canvas.create_image(0, 0, image=self.image_tk, anchor='nw')
         # # UIフレームを作成
         self.ui_frame    = tk.Frame(self.master)
-        self.ui_frame.place(x=0, y=0, width=self.screen_width/7, height=self.screen_height/2)
+        self.ui_frame.place(x=0, y=0, width=self.screen_width/7, height=self.screen_height*0.6)
         self.ui_frame_is_focused = False
 
         self.ui_input_interommatidial_angle = tk.StringVar()
         self.ui_input_ommatidium_angle      = tk.StringVar()
         self.ui_input_ommatidium_count      = tk.StringVar()
         self.ui_input_filter                = tk.StringVar()
+        self.ui_blur_size                   = tk.DoubleVar()
 
         # titleは現在のフレーム番号/総フレーム数
         self.update_title()
@@ -148,41 +149,47 @@ class UIViewer:
         filter_label.grid(row=6, column=0, columnspan=3)
         filter_combobox.grid(row=7, column=0, columnspan=3)
 
+        blur_label = tk.Label(self.ui_frame, text="ぼかしサイズ")
+        blur_slider = tk.Scale(self.ui_frame, from_=0.0, to=1.0, resolution=0.01, orient=tk.HORIZONTAL, variable=self.ui_blur_size)
+        blur_slider.set(0.5)
+        blur_label.grid(row=8, column=0, columnspan=3)
+        blur_slider.grid(row=9, column=0, columnspan=3)
+
         apply_button = tk.Button(self.ui_frame, text="変更の適用", command=self.on_apply_click)
-        apply_button.grid(row=8, columnspan=3, sticky=tk.N+tk.S+tk.E+tk.W)
+        apply_button.grid(row=10, columnspan=3, sticky=tk.N+tk.S+tk.E+tk.W)
 
         view_control_label = tk.Label(self.ui_frame, text="視点操作(上下左右)")
-        view_control_label.grid(row=9, column=0, columnspan=3)
+        view_control_label.grid(row=11, column=0, columnspan=3)
 
         up_button = tk.Button(self.ui_frame, text="上", command=self.on_up_click)
         down_button = tk.Button(self.ui_frame, text="下", command=self.on_down_click)
         left_button = tk.Button(self.ui_frame, text="左", command=self.on_left_click)
         right_button = tk.Button(self.ui_frame, text="右", command=self.on_right_click)
-        up_button.grid(row=10, column=1, columnspan=1, sticky=tk.N+tk.S+tk.E+tk.W)
-        left_button.grid(row=11, column=0, columnspan=1, sticky=tk.N+tk.S+tk.E+tk.W)
-        down_button.grid(row=11, column=1, columnspan=1, sticky=tk.N+tk.S+tk.E+tk.W)
-        right_button.grid(row=11, column=2, columnspan=1, sticky=tk.N+tk.S+tk.E+tk.W)
+        up_button.grid(row=12, column=1, columnspan=1, sticky=tk.N+tk.S+tk.E+tk.W)
+        left_button.grid(row=13, column=0, columnspan=1, sticky=tk.N+tk.S+tk.E+tk.W)
+        down_button.grid(row=13, column=1, columnspan=1, sticky=tk.N+tk.S+tk.E+tk.W)
+        right_button.grid(row=13, column=2, columnspan=1, sticky=tk.N+tk.S+tk.E+tk.W)
 
 
         move_image_label = tk.Label(self.ui_frame, text="画像の変更(+1, -1, +10, -10)")
-        move_image_label.grid(row=12, column=0, columnspan=3)
+        move_image_label.grid(row=14, column=0, columnspan=3)
 
         prev_1frame_image_button = tk.Button(self.ui_frame, text="前の画像(-1)", command=self.on_prev_1frame_image)
-        prev_1frame_image_button.grid(row=13, column=0, columnspan=1,  sticky=tk.N+tk.S+tk.E+tk.W)
+        prev_1frame_image_button.grid(row=15, column=0, columnspan=1,  sticky=tk.N+tk.S+tk.E+tk.W)
         next_1frame_image_button = tk.Button(self.ui_frame, text="次の画像(+1)", command=self.on_next_1frame_image)
-        next_1frame_image_button.grid(row=13, column=2, columnspan=1, sticky=tk.N+tk.S+tk.E+tk.W)
+        next_1frame_image_button.grid(row=15, column=2, columnspan=1, sticky=tk.N+tk.S+tk.E+tk.W)
 
         prev_10frame_image_button = tk.Button(self.ui_frame, text="前の画像(-10)", command=self.on_prev_10frame_image)
-        prev_10frame_image_button.grid(row=14, column=0, columnspan=1,  sticky=tk.N+tk.S+tk.E+tk.W)
+        prev_10frame_image_button.grid(row=16, column=0, columnspan=1,  sticky=tk.N+tk.S+tk.E+tk.W)
         next_10frame_image_button = tk.Button(self.ui_frame, text="次の画像(+10)", command=self.on_next_10frame_image)
-        next_10frame_image_button.grid(row=14, column=2, columnspan=1, sticky=tk.N+tk.S+tk.E+tk.W)
+        next_10frame_image_button.grid(row=16, column=2, columnspan=1, sticky=tk.N+tk.S+tk.E+tk.W)
 
 
         save_view_image_button = tk.Button(self.ui_frame, text="現在の視点画像を保存", command=self.on_save_view_image_click)
-        save_view_image_button.grid(row=15, column=0, columnspan=3, sticky=tk.N+tk.S+tk.E+tk.W)
+        save_view_image_button.grid(row=17, column=0, columnspan=3, sticky=tk.N+tk.S+tk.E+tk.W)
 
         save_settings_button = tk.Button(self.ui_frame, text="設定ファイル保存(.toml)", command=self.on_save_settings_click)
-        save_settings_button.grid(row=16, column=0, columnspan=3, sticky=tk.N+tk.S+tk.E+tk.W)
+        save_settings_button.grid(row=18, column=0, columnspan=3, sticky=tk.N+tk.S+tk.E+tk.W)
         
     def run(self):
         self.update_view()
@@ -239,8 +246,19 @@ class UIViewer:
                 self.settings['view_mode'] = 'color'
                 should_update = True
 
+        should_update = self.update_blur_size(float(self.ui_blur_size.get()))
+
         if should_update:
             self.update_view()
+
+    def update_blur_size(self, value):
+        hex_width = 1920 / int(self.ui_input_ommatidium_count.get())
+        blur_size = int(value * hex_width)
+        if self.settings['blur_size'] == blur_size:
+            return False
+        else:
+            self.settings['blur_size'] = blur_size
+            return True
 
     def convert_filter_name(self, value):
         new_str = ""
@@ -380,6 +398,7 @@ class UIViewer:
         print("個眼視野角: ", self.ui_input_ommatidium_angle.get())
         print("個眼個数: ", self.ui_input_ommatidium_count.get())
         print("フィルタ: ", self.ui_input_filter.get())
+        print("ぼかしサイズ: ", self.settings['blur_size'])
         print(f"視点: ({self.settings['phi']}, {self.settings['theta']})")
 
     def update_canvas_from_pil(self):
