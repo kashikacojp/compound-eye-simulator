@@ -1,6 +1,7 @@
 from update_view_process import load_exr_depth
 from hexagonal_filter import get_hexagon_data, hexagonal_filter, hexagonal_gaussian_filter, hexagonal_depth_gaussian_filter, apply_uniform_blur
 import cv2
+import sys
 import os
 import numpy as np
 import glob
@@ -14,10 +15,11 @@ def enumerate_image_files(image_format):
     # image_files[i][j]はi番目の画像のj番目の個眼の画像
     # ここで, image_fileのfilenameはimage_jjjj_iiii.(拡張子)となっている
     # ここで, iiiiは画像番号, jjjjは個眼番号
-    # まず  , 最大の画像番号と個眼番号を求める
-    max_image_number = 0
+    # まず  , 最小最大の画像番号と個眼番号を求める
+    min_image_number      = sys.maxsize
+    max_image_number      = 0
     max_ommatidium_number = 0
-    image_tmp_files = sorted(glob.glob(image_format))
+    image_tmp_files       = sorted(glob.glob(image_format))
     for image_tmp_file in image_tmp_files:
         filename = os.path.basename(image_tmp_file)
         # ommatidium_numberは, filenameを'_'で分割したときの2番目の要素
@@ -25,16 +27,17 @@ def enumerate_image_files(image_format):
         # image_numberは, filenameを'_'で分割したときの3番目の要素
         image_number = int(filename.split('_')[2].split('.')[0])
         max_image_number = max(max_image_number, image_number)
+        min_image_number = min(min_image_number, image_number)
         max_ommatidium_number = max(max_ommatidium_number, ommatidium_number)
-    # image_filesをmax_image_number+1, max_ommatidium_number+1の2次元配列として初期化
-    image_files = [[None for _ in range(max_ommatidium_number+1)] for _ in range(max_image_number+1)]
+    # image_filesをmax_number-min_number +1, max_ommatidium_number+1の2次元配列として初期化
+    image_files = [[None for _ in range(max_ommatidium_number + 1)] for _ in range(max_image_number - min_image_number + 1)]
     for image_tmp_file in image_tmp_files:
         filename = os.path.basename(image_tmp_file)
         # ommatidium_numberは, filenameを'_'で分割したときの2番目の要素
         ommatidium_number = int(filename.split('_')[1])
         # image_numberは, filenameを'_'で分割したときの3番目の要素
         image_number = int(filename.split('_')[2].split('.')[0])
-        image_files[image_number][ommatidium_number] = image_tmp_file
+        image_files[image_number-min_image_number][ommatidium_number] = image_tmp_file
     return image_files
 # ここからメインプログラム
 def process_frame(settings, color_image_files, depth_image_files, current_image_index):
