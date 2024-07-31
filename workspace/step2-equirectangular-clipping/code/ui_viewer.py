@@ -19,11 +19,11 @@ class UIViewer:
         parser = argparse.ArgumentParser(description='360 Viewer for compound eye simulator')
         prompt = "TOML settings file (e.g., 'settings/*.toml'): "
         default = './settings/settings.toml'
-        parser.add_argument('-f','--file', type=str, default=default, help=f"{prompt} (default: {default}): ")
+        parser.add_argument('-s','--setting', type=str, default=default, help=f"{prompt} (default: {default}): ")
         args = parser.parse_args()
-        with open(args.file,mode='rb') as file:
+        with open(args.setting,mode='rb') as file:
             if not file:
-                print(f"Error: Could not open file {args.file}")
+                print(f"Error: Could not open file {args.setting}")
                 exit()
             self.settings = tomllib.load(file)
         # デフォルト値の設定
@@ -62,6 +62,9 @@ class UIViewer:
         if not 'blur_size' in self.settings:
             print ("Warning: 'blur_size' not found in settings. Using default value 30.")
             self.settings['blur_size'] = 30
+        if not 'frame' in self.settings:
+            print ("Warning: 'frame' not found in settings. Using default value 0.")
+            self.settings['frame'] = 0
 
         self.pre_setup  = True
         self.view_image = None
@@ -69,8 +72,13 @@ class UIViewer:
         image_format  = self.settings['image_format']  
         # 画像の読み込み
         self.image_files = sorted(glob.glob(image_format))
-        self.current_image_index = 0
-        self.panorama = cv2.imread(self.image_files[self.current_image_index])
+        if len(self.image_files) == 0:
+            print(f"No images found: {image_format}")
+            sys.exit(1)
+        if len(self.image_files) <= int(self.settings['frame']):
+            print(f"Num images not matched with current frame number: {len(self.image_files)} <= {self.settings['frame']}")
+            self.settings['frame'] = 0
+        self.panorama = cv2.imread(self.image_files[self.settings['frame']])
 
         # Depthファイルのパスを生成
         depth_format = image_format.replace('output_color', 'output_depth').replace('.png', '.exr')
@@ -101,18 +109,22 @@ class UIViewer:
         self.imageItemID = self.canvas.create_image(0, 0, image=self.image_tk, anchor='nw')
         # # UIフレームを作成
         self.ui_frame    = tk.Frame(self.master)
-        self.ui_frame.place(x=0, y=0, width=self.screen_width/7, height=self.screen_height/2)
+        self.ui_frame.place(x=0, y=0, width=self.screen_width/7, height=self.screen_height*0.6)
         self.ui_frame_is_focused = False
 
         self.ui_input_interommatidial_angle = tk.StringVar()
         self.ui_input_ommatidium_angle      = tk.StringVar()
         self.ui_input_ommatidium_count      = tk.StringVar()
         self.ui_input_filter                = tk.StringVar()
+        self.ui_blur_size                   = tk.DoubleVar()
+
+        # titleは現在のフレーム番号/総フレーム数
+        self.update_title()
 
         self.setup_ui()
 
     def setup_ui(self):
-        interommatidial_angle_label = tk.Label(self.ui_frame, text="個眼間画角")
+        interommatidial_angle_label = tk.Label(self.ui_frame, text="個眼間角度")
         interommatidial_angle_entry = tk.Entry(self.ui_frame, textvariable=self.ui_input_interommatidial_angle)
         interommatidial_angle_label.grid(row=0, column=0, columnspan=3)
         interommatidial_angle_entry.grid(row=1, column=0, columnspan=3)
@@ -131,51 +143,58 @@ class UIViewer:
         ommatidium_count_entry.insert (0, self.settings['ommatidium_count'])
 
         filter_label = tk.Label(self.ui_frame, text="フィルタ切り替え")
-        filter_combobox = ttk.Combobox(self.ui_frame, values=["none","hexagonal", "hexagonal_gaussian", "hexagonal_depth_gaussian","debug_color","debug_depth"], textvariable=self.ui_input_filter)
-        filter_combobox.set (self.settings['filter'])
+        #filter_combobox = ttk.Combobox(self.ui_frame, values=["none","hexagonal", "hexagonal_gaussian", "hexagonal_depth_gaussian","debug_color","debug_depth"], textvariable=self.ui_input_filter)
+        filter_combobox = ttk.Combobox(self.ui_frame, values=[self.convert_filter_name_reverse("none"),self.convert_filter_name_reverse("hexagonal"), self.convert_filter_name_reverse("hexagonal_depth_gaussian")], textvariable=self.ui_input_filter)
+        filter_combobox.set (self.convert_filter_name_reverse(self.settings['filter']))
         filter_label.grid(row=6, column=0, columnspan=3)
         filter_combobox.grid(row=7, column=0, columnspan=3)
 
+        blur_label = tk.Label(self.ui_frame, text="ぼかしサイズ")
+        blur_slider = tk.Scale(self.ui_frame, from_=0.0, to=1.0, resolution=0.01, orient=tk.HORIZONTAL, variable=self.ui_blur_size)
+        blur_slider.set(0.5)
+        blur_label.grid(row=8, column=0, columnspan=3)
+        blur_slider.grid(row=9, column=0, columnspan=3)
+
         apply_button = tk.Button(self.ui_frame, text="変更の適用", command=self.on_apply_click)
-        apply_button.grid(row=8, columnspan=3, sticky=tk.N+tk.S+tk.E+tk.W)
+        apply_button.grid(row=10, columnspan=3, sticky=tk.N+tk.S+tk.E+tk.W)
 
         view_control_label = tk.Label(self.ui_frame, text="視点操作(上下左右)")
-        view_control_label.grid(row=9, column=0, columnspan=3)
+        view_control_label.grid(row=11, column=0, columnspan=3)
 
         up_button = tk.Button(self.ui_frame, text="上", command=self.on_up_click)
         down_button = tk.Button(self.ui_frame, text="下", command=self.on_down_click)
         left_button = tk.Button(self.ui_frame, text="左", command=self.on_left_click)
         right_button = tk.Button(self.ui_frame, text="右", command=self.on_right_click)
-        up_button.grid(row=10, column=1, columnspan=1, sticky=tk.N+tk.S+tk.E+tk.W)
-        left_button.grid(row=11, column=0, columnspan=1, sticky=tk.N+tk.S+tk.E+tk.W)
-        down_button.grid(row=11, column=1, columnspan=1, sticky=tk.N+tk.S+tk.E+tk.W)
-        right_button.grid(row=11, column=2, columnspan=1, sticky=tk.N+tk.S+tk.E+tk.W)
+        up_button.grid(row=12, column=1, columnspan=1, sticky=tk.N+tk.S+tk.E+tk.W)
+        left_button.grid(row=13, column=0, columnspan=1, sticky=tk.N+tk.S+tk.E+tk.W)
+        down_button.grid(row=13, column=1, columnspan=1, sticky=tk.N+tk.S+tk.E+tk.W)
+        right_button.grid(row=13, column=2, columnspan=1, sticky=tk.N+tk.S+tk.E+tk.W)
 
 
         move_image_label = tk.Label(self.ui_frame, text="画像の変更(+1, -1, +10, -10)")
-        move_image_label.grid(row=12, column=0, columnspan=3)
+        move_image_label.grid(row=14, column=0, columnspan=3)
 
         prev_1frame_image_button = tk.Button(self.ui_frame, text="前の画像(-1)", command=self.on_prev_1frame_image)
-        prev_1frame_image_button.grid(row=13, column=0, columnspan=1,  sticky=tk.N+tk.S+tk.E+tk.W)
+        prev_1frame_image_button.grid(row=15, column=0, columnspan=1,  sticky=tk.N+tk.S+tk.E+tk.W)
         next_1frame_image_button = tk.Button(self.ui_frame, text="次の画像(+1)", command=self.on_next_1frame_image)
-        next_1frame_image_button.grid(row=13, column=2, columnspan=1, sticky=tk.N+tk.S+tk.E+tk.W)
+        next_1frame_image_button.grid(row=15, column=2, columnspan=1, sticky=tk.N+tk.S+tk.E+tk.W)
 
         prev_10frame_image_button = tk.Button(self.ui_frame, text="前の画像(-10)", command=self.on_prev_10frame_image)
-        prev_10frame_image_button.grid(row=14, column=0, columnspan=1,  sticky=tk.N+tk.S+tk.E+tk.W)
+        prev_10frame_image_button.grid(row=16, column=0, columnspan=1,  sticky=tk.N+tk.S+tk.E+tk.W)
         next_10frame_image_button = tk.Button(self.ui_frame, text="次の画像(+10)", command=self.on_next_10frame_image)
-        next_10frame_image_button.grid(row=14, column=2, columnspan=1, sticky=tk.N+tk.S+tk.E+tk.W)
+        next_10frame_image_button.grid(row=16, column=2, columnspan=1, sticky=tk.N+tk.S+tk.E+tk.W)
 
 
         save_view_image_button = tk.Button(self.ui_frame, text="現在の視点画像を保存", command=self.on_save_view_image_click)
-        save_view_image_button.grid(row=15, column=0, columnspan=3, sticky=tk.N+tk.S+tk.E+tk.W)
+        save_view_image_button.grid(row=17, column=0, columnspan=3, sticky=tk.N+tk.S+tk.E+tk.W)
 
         save_settings_button = tk.Button(self.ui_frame, text="設定ファイル保存(.toml)", command=self.on_save_settings_click)
-        save_settings_button.grid(row=16, column=0, columnspan=3, sticky=tk.N+tk.S+tk.E+tk.W)
+        save_settings_button.grid(row=18, column=0, columnspan=3, sticky=tk.N+tk.S+tk.E+tk.W)
         
     def run(self):
         self.update_view()
         self.master.mainloop()
-        self.save_settings()
+        print("[終了時の設定]\n" + tomli_w.dumps(self.settings))
 
     def on_apply_click(self):
         new_interommatidial_angle = float(self.ui_input_interommatidial_angle.get())
@@ -209,6 +228,12 @@ class UIViewer:
                 self.settings['view_mode'] = 'depth'
                 should_update = True
         else:
+            new_filter = self.convert_filter_name(new_filter)
+
+            if new_filter == "":
+                print("フィルタが不正です")
+                return
+
             if self.settings['filter'] != new_filter:
                 self.settings['view_mode'] = 'color'
                 self.settings['filter'] = new_filter
@@ -221,40 +246,71 @@ class UIViewer:
                 self.settings['view_mode'] = 'color'
                 should_update = True
 
+        if self.update_blur_size(float(self.ui_blur_size.get())):
+            should_update = True
+
         if should_update:
-            print("変更を適用します")
-            print("個眼間画角: ", self.ui_input_interommatidial_angle.get())
-            print("個眼視野角: ", self.ui_input_ommatidium_angle.get())
-            print("個眼個数: ", self.ui_input_ommatidium_count.get())
-            print("フィルタ: ", self.ui_input_filter.get())
             self.update_view()
+
+    def update_blur_size(self, value):
+        hex_width = 1920 / int(self.ui_input_ommatidium_count.get())
+        blur_size = int(value * hex_width)
+        if self.settings['blur_size'] == blur_size:
+            return False
+        else:
+            self.settings['blur_size'] = blur_size
+            return True
+
+    def convert_filter_name(self, value):
+        new_str = ""
+        if value == "入力画像":
+            new_str = "none"            
+        elif value == "平均フィルタ":
+            new_str = "hexagonal"
+        elif value == "深度+ガウシアンフィルタ":
+            new_str = "hexagonal_depth_gaussian"           
+        return new_str
+
+    def convert_filter_name_reverse(self, value):
+        new_str = ""
+        if value == "none":
+            new_str = "入力画像"
+        elif value == "hexagonal":
+            new_str = "平均フィルタ"
+        elif value == "hexagonal_depth_gaussian":
+            new_str = "深度+ガウシアンフィルタ"
+        return new_str
 
     def on_up_click(self):
         self.settings['phi'] = min(self.settings['phi'] + 5, 90)
-        print(f"event.char: W - Rotate up, Phi: {self.settings['phi']}")
+        #print(f"event.char: W - Rotate up, Phi: {self.settings['phi']}")
         self.update_view()
 
     def on_down_click(self):
         self.settings['phi'] = max(self.settings['phi'] - 5, -90)
-        print(f"event.char: S - Rotate down, Phi: {self.settings['phi']}")
+        #print(f"event.char: S - Rotate down, Phi: {self.settings['phi']}")
         self.update_view()
 
     def on_left_click(self):
         self.settings['theta'] = (self.settings['theta'] + 10) % 360
-        print(f"event.char: A - Rotate left, Theta: {self.settings['theta']}")
+        #print(f"event.char: A - Rotate left, Theta: {self.settings['theta']}")
         self.update_view()
 
     def on_right_click(self):
         self.settings['theta'] = (self.settings['theta'] - 10) % 360
-        print(f"event.char: D - Rotate right, Theta: {self.settings['theta']}")
+        #print(f"event.char: D - Rotate right, Theta: {self.settings['theta']}")
         self.update_view()
 
     def on_save_view_image_click(self):
         root = tk.Tk()
         root.withdraw()
+        #image_[phi]_[theta]_[フレーム番号]_[YYYYMMDDhhmmss].png　
+        default_filename = f"image_{self.settings['phi']}_{self.settings['theta']}_{self.settings['frame']}_{time.strftime('%Y%m%d%H%M%S')}.png"
         file_path = filedialog.asksaveasfilename(
             defaultextension=".png",
             filetypes=[("PNG files", "*.png"), ("JPEG files", "*.jpg"), ("All files", "*.*")],
+            initialdir=os.getcwd(),
+            initialfile=default_filename
         )
         if not file_path:
             print("保存がキャンセルされました。")
@@ -280,28 +336,32 @@ class UIViewer:
                 self.pre_setup = False
 
     def on_next_1frame_image(self):
-        self.current_image_index = (self.current_image_index + 1) % len(self.image_files)
-        print(f"event.char: ] - Next image, Index: {self.current_image_index}")
+        self.settings['frame'] = (self.settings['frame'] + 1) % len(self.image_files)
+        # print(f"event.char: ] - Next image, Index: {self.settings['frame']}")
         self.update_view()
+        self.update_title()
 
     def on_prev_1frame_image(self):
-        if self.current_image_index == 0:
-            return
-        self.current_image_index = (self.current_image_index - 1) % len(self.image_files)
-        print(f"event.char: [ - Previous image, Index: {self.current_image_index}")
+        self.settings['frame'] = self.settings['frame'] - 1
+        if self.settings['frame'] < 0:
+            self.settings['frame'] = len(self.image_files) + self.settings['frame'] # 'frame' is negative so add it to the total number of images
+        # print(f"event.char: [ - Previous image, Index: {self.settings['frame']}")
         self.update_view()
+        self.update_title()
 
     def on_next_10frame_image(self):
-        self.current_image_index = (self.current_image_index + 10) % len(self.image_files)
-        print(f"event.char: Shift+] - Forward 10 frames, Index: {self.current_image_index}")
+        self.settings['frame'] = (self.settings['frame'] + 10) % len(self.image_files)
+        # print(f"event.char: Shift+] - Forward 10 frames, Index: {self.settings['frame']}")
         self.update_view()
+        self.update_title()
     
     def on_prev_10frame_image(self):
-        if self.current_image_index < 10:
-            return
-        self.current_image_index = (self.current_image_index - 10) % len(self.image_files)
-        print(f"event.char: Shift+[ - Backward 10 frames, Index: {self.current_image_index}")
+        self.settings['frame'] = self.settings['frame'] - 10
+        if self.settings['frame'] < 0:
+            self.settings['frame'] = len(self.image_files) + self.settings['frame'] # 'frame' is negative so add it to the total number of images
+        # print(f"event.char: Shift+[ - Backward 10 frames, Index: {self.settings['frame']}")
         self.update_view()
+        self.update_title()
 
     def on_esc_key(self, event):
         print("ESCキーが押されました, 終了します")
@@ -311,14 +371,22 @@ class UIViewer:
         # scriptのworking directoryを取得
         working_directory = os.getcwd()
         # 保存ファイル名は, settings_YYYYMMDDHHMMSS.toml
-        save_file_name = working_directory+f"/settings_{time.strftime('%Y%m%d%H%M%S')}.toml"
-        # settingsを保存
-        with open(save_file_name, 'wb') as file:
-            tomli_w.dump(self.settings, file)
-            print(f"設定ファイルを保存しました: {save_file_name.split('/')[-1]}")
+        default_filename = f"settings_{time.strftime('%Y%m%d%H%M%S')}.toml"
+        file_path = filedialog.asksaveasfilename(
+            defaultextension=".toml",
+            filetypes=[("TOML files", "*.toml"), ("All files", "*.*")],
+            initialdir=working_directory,
+            initialfile=default_filename
+        )
+        if not file_path:
+            print("保存がキャンセルされました。")
+            return
+        with open(file_path, 'wb') as f:
+            tomli_w.dump(self.settings, f)
+            print("設定ファイルを保存しました: ", file_path.split('/')[-1])
 
     def update_view(self):
-        (tmp_panorama,tmp_view_image) = update_view_process(self.current_image_index, self.image_files, self.depth_files, self.settings, False,False)
+        (tmp_panorama,tmp_view_image) = update_view_process(self.settings['frame'], self.image_files, self.depth_files, self.settings, False,False,True)
         self.panorama    = tmp_panorama
         self.view_image  = tmp_view_image 
         image_bgr        = self.view_image
@@ -326,11 +394,22 @@ class UIViewer:
         self.image_pil   = Image.fromarray(image_rgb)
         self.update_canvas_from_pil()
 
+        print("変更を適用します")
+        print("個眼間角度: ", self.ui_input_interommatidial_angle.get())
+        print("個眼視野角: ", self.ui_input_ommatidium_angle.get())
+        print("個眼個数: ", self.ui_input_ommatidium_count.get())
+        print("フィルタ: ", self.ui_input_filter.get())
+        print("ぼかしサイズ: ", self.settings['blur_size'])
+        print(f"視点: ({self.settings['phi']}, {self.settings['theta']})")
+
     def update_canvas_from_pil(self):
         self.image_pil   = self.image_pil.resize((self.screen_width, self.screen_height))
         self.image_tk    = ImageTk.PhotoImage(self.image_pil)
         self.canvas.itemconfig(self.imageItemID, image=self.image_tk)
 
+    def update_title(self):
+        # titleは現在のフレーム番号/総フレーム数
+        self.master.title(f"{self.settings['frame']}/{len(self.image_files)}")
 
 if __name__ == "__main__":
     root = tk.Tk()
