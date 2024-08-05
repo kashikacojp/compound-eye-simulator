@@ -194,6 +194,9 @@ class SceneRenderer:
         return base_camera
 
     def render_frame_image(self,base_filename, base_camera, frame_index, field_of_view, radius):
+        # 
+        phi = self.input_settings['phi']
+        theta = self.input_settings['theta']
         # シーンを指定されたキーフレームへ移動
         bpy.context.scene.frame_set(frame_index)
         # ベースカメラの位置を取得
@@ -217,8 +220,8 @@ class SceneRenderer:
             # 中心角を取得(phiは0~360, thetaは0~180)
             (center_phi, center_theta) = center
             # ラジアンへ変換
-            center_phi   = center_phi   * 3.141592653589793 / 180.0
-            center_theta = center_theta * 3.141592653589793 / 180.0
+            center_phi   = (center_phi   +   phi) * 3.141592653589793 / 180.0
+            center_theta = (center_theta - theta) * 3.141592653589793 / 180.0
             self.rotate_camera (camera, camera_location, radius, camera_rotation, center_phi, center_theta)  
             # 
             bpy.context.collection.objects.link(camera)
