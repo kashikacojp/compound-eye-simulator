@@ -41,6 +41,10 @@ def calc_pixel_viewport(settings):
     final_settings = { 'centers': centers, 'theta': settings['theta'], 'phi': settings['phi'], 'ommatidium_angle': settings['ommatidium_angle'] }
     return final_settings
 
+
+def run(settings):
+    return calc_pixel_viewport(settings)
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Calculate pixel viewport for compound eye simulator')
     prompt = "TOML settings file (e.g., 'settings/*.toml'): "

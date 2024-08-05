@@ -68,17 +68,16 @@ class SceneRenderer:
         bpy.context.scene.cycles.device                     = 'GPU'
         bpy.context.scene.use_nodes = True
         bpy.context.scene.view_layers["ViewLayer"].use_pass_z = True
-
         cycles_preferences = bpy.context.preferences.addons['cycles'].preferences
-        print(str(cycles_preferences))
+        cycles_preferences.get_devices()
 
         selected_device_type = None
         
         for device in cycles_preferences.devices:
             print ("supported device.name is "+device.type)
-#            if device.type == 'OPTIX':
-#                selected_device_type = device.type
-#                break
+            if device.type == 'OPTIX':
+                selected_device_type = device.type
+                break
             if device.type == 'CUDA':
                 selected_device_type = device.type
         
@@ -279,6 +278,11 @@ class SceneRenderer:
         print("output_path=",self.output_path)
         print("output_color_path=",self.output_color_path)
         print("output_depth_path=",self.output_depth_path)
+
+def run(scene_path,hex_pos_settings, color_image_dir,depth_image_dir):
+    renderer = SceneRenderer(scene_path=scene_path,output_depth_format='OPEN_EXR', input_settings=hex_pos_settings,output_color_path=color_image_dir,output_depth_path=depth_image_dir)
+    renderer.print()
+    renderer.run()    
 
 if __name__ == "__main__":
     input_settings = {
