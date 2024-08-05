@@ -12,7 +12,8 @@ class SceneRenderer:
     output_color_path     = None
     output_depth_path     = None
     input_settings        = None
-    def __init__(self, input_settings = None, scene_path = None,background_image_path= None,output_path= None,output_color_path= None,output_depth_path = None,output_depth_format = 'PNG'):
+    target_frame_index    = None
+    def __init__(self, input_settings = None, scene_path = None,background_image_path= None,output_path= None,output_color_path= None,output_depth_path = None,output_depth_format = 'PNG', target_frame_index = None):
         if scene_path is not None:
             self.load_scene(scene_path)
         else:
@@ -45,6 +46,7 @@ class SceneRenderer:
                 os.makedirs(output_depth_path)
         self.output_depth_path = abspath(output_depth_path)
         self.output_depth_format = output_depth_format
+        self.target_frame_index  = target_frame_index
     def load_scene(self, scene_path):
         if (scene_path is None):
             return False
@@ -254,10 +256,13 @@ class SceneRenderer:
         # レンダリング設定のセットアップ(共通)
         self.setup_rendering_common(width, height, samples)
         # 開始フレーム, 終了フレームを取得
-        frame_start      = bpy.context.scene.frame_start
-        frame_end        = bpy.context.scene.frame_end
-        # DEBUG: 処理負荷軽減のためにフレーム数を1に制限
-        frame_end        = min(frame_end, frame_start )
+        if self.target_frame_index is not None:
+            frame_start = self.target_frame_index
+            frame_end   = self.target_frame_index
+        else:
+            frame_start      = bpy.context.scene.frame_start
+            frame_end        = bpy.context.scene.frame_end
+        # 出力ファイル名のベースを設定
         base_file_name   = 'image'
         # カメラを格納する変数を初期化
         base_camera      = self.find_base_camera()
@@ -283,8 +288,8 @@ class SceneRenderer:
         print("output_color_path=",self.output_color_path)
         print("output_depth_path=",self.output_depth_path)
 
-def run(scene_path,hex_pos_settings, color_image_dir,depth_image_dir):
-    renderer = SceneRenderer(scene_path=scene_path,output_depth_format='OPEN_EXR', input_settings=hex_pos_settings,output_color_path=color_image_dir,output_depth_path=depth_image_dir)
+def run(scene_path,hex_pos_settings, color_image_dir,depth_image_dir,frame_index):
+    renderer = SceneRenderer(scene_path=scene_path,output_depth_format='OPEN_EXR', input_settings=hex_pos_settings,output_color_path=color_image_dir,output_depth_path=depth_image_dir, target_frame_index=frame_index)
     renderer.print()
     renderer.run()    
 
@@ -294,10 +299,10 @@ if __name__ == "__main__":
     'theta': 0,
     'phi': 0,
     'ommatidium_angle': 1.5,
-    'ommatidium_radius' : 1.0
+    'ommatidium_radius' : 1.0,
 }
 
-    renderer = SceneRenderer(output_depth_format='OPEN_EXR', input_settings=input_settings)
+    renderer = SceneRenderer(output_depth_format='OPEN_EXR', input_settings=input_settings, target_frame_index=0)
     renderer.print()
     renderer.run()
     

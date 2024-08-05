@@ -29,15 +29,22 @@ def enumerate_image_files(image_format):
         max_image_number = max(max_image_number, image_number)
         min_image_number = min(min_image_number, image_number)
         max_ommatidium_number = max(max_ommatidium_number, ommatidium_number)
-    # image_filesをmax_number-min_number +1, max_ommatidium_number+1の2次元配列として初期化
-    image_files = [[None for _ in range(max_ommatidium_number + 1)] for _ in range(max_image_number - min_image_number + 1)]
+    # image_filesは辞書
+    image_files = None
     for image_tmp_file in image_tmp_files:
         filename = os.path.basename(image_tmp_file)
         # ommatidium_numberは, filenameを'_'で分割したときの2番目の要素
         ommatidium_number = int(filename.split('_')[1])
         # image_numberは, filenameを'_'で分割したときの3番目の要素
         image_number = int(filename.split('_')[2].split('.')[0])
-        image_files[image_number-min_image_number][ommatidium_number] = image_tmp_file
+        # image_filesがNoneの場合, image_filesを初期化
+        # キーはimage_number, 値はmax_ommatidium_number個のstring型の配列
+        if image_files is None:
+            image_files = {}
+            image_files[image_number] = [""] * (max_ommatidium_number + 1)
+        elif image_number not in image_files:
+            image_files[image_number] = [""] * (max_ommatidium_number + 1)
+        image_files[image_number][ommatidium_number] = image_tmp_file
     return image_files
 # ここからメインプログラム
 def process_frame(settings, color_image_files, depth_image_files, current_image_index):
@@ -116,7 +123,7 @@ def process_frame(settings, color_image_files, depth_image_files, current_image_
 # def debug_filter(image, ommatidium_count, filter_size):
 #     return image
     
-def run(settings,input_image_dir, output_image_dir):
+def run(settings,input_image_dir, output_image_dir,frame_index):
     # ソースディレクトリを取得
     src_dir = os.path.dirname(os.path.abspath(__file__))
     # テスト用の色画像ファイルを読み込む
@@ -128,10 +135,8 @@ def run(settings,input_image_dir, output_image_dir):
     depth_image_format = color_image_format.replace('color', 'depth').replace('.png', '.exr')
     color_image_files = enumerate_image_files (color_image_format)
     depth_image_files = enumerate_image_files (depth_image_format)
-    print (color_image_format)
-    print (depth_image_format)
     # 次にファイルをすべて表示する
-    current_image_index = 0
+    current_image_index = frame_index
     output_image = process_frame(settings, color_image_files, depth_image_files, current_image_index)
     # Call function
     # Save image to output directory
