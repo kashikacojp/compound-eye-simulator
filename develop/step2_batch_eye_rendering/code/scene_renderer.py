@@ -173,8 +173,9 @@ class SceneRenderer:
         # 回転角はtheta
         rotation_matrix = Quaternion(local_x_axis, -theta).to_matrix().to_4x4() @ rotation_matrix
         # カメラの姿勢として設定
-        camera.matrix_world =  camera.matrix_world @ rotation_matrix
-        camera.location     = base_location
+        camera.matrix_world = camera.matrix_world @ rotation_matrix
+        view_vector         = camera.matrix_world.to_3x3() @ Vector((0.0, 0.0, -1.0))
+        camera.location     = base_location + view_vector * base_radius
         
     def find_base_camera(self):
         # シーン内のすべてのオブジェクトを取得
@@ -228,7 +229,7 @@ class SceneRenderer:
             self.setup_rendering_frame(base_file_name_per_frame)
             bpy.context.scene.camera = camera
             # レンダリング実行
-            bpy.ops.render.render(write_still=True)
+            # bpy.ops.render.render(write_still=True)
             # 時間計測終了
             end = time.time()
             # 経過時間を表示(秒)
@@ -269,7 +270,10 @@ class SceneRenderer:
         if 'centers' not in self.input_settings:
             print ("centers not found in input_settings")
             return
-        radius = 1.0
+        if 'ommatidium_radius' not in self.input_settings:
+            radius = 0.0
+        else:
+            radius = self.input_settings['ommatidium_radius']
         # 描画処理を実行
         self.render_images(base_file_name, base_camera,frame_start,frame_end,field_of_view, radius)
 
@@ -290,6 +294,7 @@ if __name__ == "__main__":
     'theta': 0,
     'phi': 0,
     'ommatidium_angle': 1.5,
+    'ommatidium_radius' : 1.0
 }
 
     renderer = SceneRenderer(output_depth_format='OPEN_EXR', input_settings=input_settings)

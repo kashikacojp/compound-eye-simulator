@@ -11,6 +11,7 @@ settings = {
     "interommatidial_angle": 1.5,
     "ommatidium_angle": 1.5,
     "ommatidium_count": 25,
+    "ommatidium_radius": 0.5,
     "theta": 0,
     "phi": 0,
     "filter": "hexagonal_gaussian",
@@ -28,6 +29,7 @@ print(color_image_dir)
 print(output_dir)
 
 hex_pos_setting = calculate_pixel_viewport.run(settings)
-#scene_renderer.run(settings["scene_path"], hex_pos_setting, color_image_dir,depth_image_dir) # Generate Images in output_color/output_depth folder
+scene_path = settings["scene_path"]
+scene_renderer.run(scene_path, hex_pos_setting, color_image_dir,depth_image_dir) # Generate Images in output_color/output_depth folder
 apply_hexigonal_filter.run(settings,color_image_dir, output_dir) # Generate Images in output_color/output_depth folder
 
