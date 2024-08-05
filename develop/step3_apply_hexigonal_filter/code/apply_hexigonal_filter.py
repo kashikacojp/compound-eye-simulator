@@ -1,5 +1,5 @@
-from update_view_process import load_exr_depth
-from hexagonal_filter import get_hexagon_data, hexagonal_filter, hexagonal_gaussian_filter, hexagonal_depth_gaussian_filter, apply_uniform_blur
+from .update_view_process import load_exr_depth
+from .hexagonal_filter    import get_hexagon_data, hexagonal_filter, hexagonal_gaussian_filter, hexagonal_depth_gaussian_filter, apply_uniform_blur
 import cv2
 import sys
 import os
@@ -29,15 +29,22 @@ def enumerate_image_files(image_format):
         max_image_number = max(max_image_number, image_number)
         min_image_number = min(min_image_number, image_number)
         max_ommatidium_number = max(max_ommatidium_number, ommatidium_number)
-    # image_filesをmax_number-min_number +1, max_ommatidium_number+1の2次元配列として初期化
-    image_files = [[None for _ in range(max_ommatidium_number + 1)] for _ in range(max_image_number - min_image_number + 1)]
+    # image_filesは辞書
+    image_files = None
     for image_tmp_file in image_tmp_files:
         filename = os.path.basename(image_tmp_file)
         # ommatidium_numberは, filenameを'_'で分割したときの2番目の要素
         ommatidium_number = int(filename.split('_')[1])
         # image_numberは, filenameを'_'で分割したときの3番目の要素
         image_number = int(filename.split('_')[2].split('.')[0])
-        image_files[image_number-min_image_number][ommatidium_number] = image_tmp_file
+        # image_filesがNoneの場合, image_filesを初期化
+        # キーはimage_number, 値はmax_ommatidium_number個のstring型の配列
+        if image_files is None:
+            image_files = {}
+            image_files[image_number] = [""] * (max_ommatidium_number + 1)
+        elif image_number not in image_files:
+            image_files[image_number] = [""] * (max_ommatidium_number + 1)
+        image_files[image_number][ommatidium_number] = image_tmp_file
     return image_files
 # ここからメインプログラム
 def process_frame(settings, color_image_files, depth_image_files, current_image_index):
@@ -111,21 +118,39 @@ def process_frame(settings, color_image_files, depth_image_files, current_image_
         result_image = cv2.normalize(result_image, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
     
     # 結果を保存
-    cv2.imwrite(f"output_{current_image_index}.png", result_image)
+    return result_image
 
 # def debug_filter(image, ommatidium_count, filter_size):
 #     return image
     
-def run(settings, color_image_dir, depth_image_dir, ouput_image_dir):
-    # 六角形の位置は、step1と全く同じ処理をすれば取得できる
-
+def run(settings,input_image_dir, output_image_dir,frame_index):
+    # ソースディレクトリを取得
+    src_dir = os.path.dirname(os.path.abspath(__file__))
+    # テスト用の色画像ファイルを読み込む
+    # 現在はsrc_dir/../../step2-batch-eye-rendering/output_color/にあると仮定
+    color_image_format = input_image_dir+'/*.png'
+    # テスト用の深度画像ファイルを読み込む
+    # 現在はsrc_dir/../../step2-batch-eye-rendering/output_depth/にあると仮定
+    # .exrファイルを読み込む
+    depth_image_format = color_image_format.replace('color', 'depth').replace('.png', '.exr')
+    color_image_files = enumerate_image_files (color_image_format)
+    depth_image_files = enumerate_image_files (depth_image_format)
+    # 次にファイルをすべて表示する
+    current_image_index = frame_index
+    output_image = process_frame(settings, color_image_files, depth_image_files, current_image_index)
     # Call function
-
-    result_image = kansu()
-
-    # Save image to output directory
-    cv2.imwrite(os.path.join(output_image_dir, "output.png"), result_image)
-    
+    # Save image to output directory 
+    # 出力ファイル名は, output_${filter_name}_0001.png, output_${filter_name}_0002.png, ...のようになる
+    filter_name = ""
+    if settings['debug_mode'] is True:
+        if settings['view_mode'] == 'color':
+            filter_name = "debug_color"
+        elif settings['view_mode'] == 'depth':
+            filter_name = "debug_depth"
+    else:
+        filter_name = settings['filter']
+    output_image_filename = os.path.join(output_image_dir, f"output_{filter_name}_{current_image_index:04d}.png")
+    cv2.imwrite(output_image_filename, output_image)
     print("Done.")
 
 if __name__ == "__main__":

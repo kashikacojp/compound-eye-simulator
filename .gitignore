@@ -1,5 +1,7 @@
 output_color/
 output_depth/
+temp_color_image/
+temp_depth_image/
 .venv/
 thirdparty/
 *.blend1

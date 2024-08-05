@@ -21,6 +21,11 @@ def get_hexagon_data(width, height, ommatidium_count):
 def calc_pixel_viewport(settings):
     width  = settings['output_width']
     height = settings['output_height']
+    if not 'ommatidium_radius' in settings:
+        print("Warning: 'ommatidium_radius' not found in settings. Using default value 0.0.")
+        radius = 0.0
+    else:
+        radius = settings['ommatidium_radius']
     ommatidium_count = settings['ommatidium_count']
     (hex_size, vertical_count, centers) = get_hexagon_data(width, height, ommatidium_count)
     # 個眼間角度を求める
@@ -38,7 +43,7 @@ def calc_pixel_viewport(settings):
     # 球面上の各個眼に対応する六角形の中心座標をcentersに格納
     # 画面の中心座標(theta,phi)
     # 個眼視野角(ommatidium_angle)
-    final_settings = { 'centers': centers, 'theta': settings['theta'], 'phi': settings['phi'], 'ommatidium_angle': settings['ommatidium_angle'] }
+    final_settings = { 'centers': centers, 'theta': settings['theta'], 'phi': settings['phi'], 'ommatidium_angle': settings['ommatidium_angle'], 'ommatidium_radius': radius }
     return final_settings
 
 

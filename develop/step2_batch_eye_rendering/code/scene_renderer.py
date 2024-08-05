@@ -12,7 +12,8 @@ class SceneRenderer:
     output_color_path     = None
     output_depth_path     = None
     input_settings        = None
-    def __init__(self, input_settings = None, scene_path = None,background_image_path= None,output_path= None,output_color_path= None,output_depth_path = None,output_depth_format = 'PNG'):
+    target_frame_index    = None
+    def __init__(self, input_settings = None, scene_path = None,background_image_path= None,output_path= None,output_color_path= None,output_depth_path = None,output_depth_format = 'PNG', target_frame_index = None):
         if scene_path is not None:
             self.load_scene(scene_path)
         else:
@@ -45,6 +46,7 @@ class SceneRenderer:
                 os.makedirs(output_depth_path)
         self.output_depth_path = abspath(output_depth_path)
         self.output_depth_format = output_depth_format
+        self.target_frame_index  = target_frame_index
     def load_scene(self, scene_path):
         if (scene_path is None):
             return False
@@ -68,9 +70,8 @@ class SceneRenderer:
         bpy.context.scene.cycles.device                     = 'GPU'
         bpy.context.scene.use_nodes = True
         bpy.context.scene.view_layers["ViewLayer"].use_pass_z = True
-
         cycles_preferences = bpy.context.preferences.addons['cycles'].preferences
-        print(str(cycles_preferences))
+        cycles_preferences.get_devices()
 
         selected_device_type = None
         
@@ -174,8 +175,9 @@ class SceneRenderer:
         # 回転角はtheta
         rotation_matrix = Quaternion(local_x_axis, -theta).to_matrix().to_4x4() @ rotation_matrix
         # カメラの姿勢として設定
-        camera.matrix_world =  camera.matrix_world @ rotation_matrix
-        camera.location     = base_location
+        camera.matrix_world = camera.matrix_world @ rotation_matrix
+        view_vector         = camera.matrix_world.to_3x3() @ Vector((0.0, 0.0, -1.0))
+        camera.location     = base_location + view_vector * base_radius
         
     def find_base_camera(self):
         # シーン内のすべてのオブジェクトを取得
@@ -192,6 +194,9 @@ class SceneRenderer:
         return base_camera
 
     def render_frame_image(self,base_filename, base_camera, frame_index, field_of_view, radius):
+        # 
+        phi = self.input_settings['phi']
+        theta = self.input_settings['theta']
         # シーンを指定されたキーフレームへ移動
         bpy.context.scene.frame_set(frame_index)
         # ベースカメラの位置を取得
@@ -215,8 +220,8 @@ class SceneRenderer:
             # 中心角を取得(phiは0~360, thetaは0~180)
             (center_phi, center_theta) = center
             # ラジアンへ変換
-            center_phi   = center_phi   * 3.141592653589793 / 180.0
-            center_theta = center_theta * 3.141592653589793 / 180.0
+            center_phi   = (center_phi  ) * 3.141592653589793 / 180.0
+            center_theta = (center_theta) * 3.141592653589793 / 180.0
             self.rotate_camera (camera, camera_location, radius, camera_rotation, center_phi, center_theta)  
             # 
             bpy.context.collection.objects.link(camera)
@@ -254,10 +259,13 @@ class SceneRenderer:
         # レンダリング設定のセットアップ(共通)
         self.setup_rendering_common(width, height, samples)
         # 開始フレーム, 終了フレームを取得
-        frame_start      = bpy.context.scene.frame_start
-        frame_end        = bpy.context.scene.frame_end
-        # DEBUG: 処理負荷軽減のためにフレーム数を1に制限
-        frame_end        = min(frame_end, frame_start )
+        if self.target_frame_index is not None:
+            frame_start = self.target_frame_index
+            frame_end   = self.target_frame_index
+        else:
+            frame_start      = bpy.context.scene.frame_start
+            frame_end        = bpy.context.scene.frame_end
+        # 出力ファイル名のベースを設定
         base_file_name   = 'image'
         # カメラを格納する変数を初期化
         base_camera      = self.find_base_camera()
@@ -270,7 +278,10 @@ class SceneRenderer:
         if 'centers' not in self.input_settings:
             print ("centers not found in input_settings")
             return
-        radius = 1.0
+        if 'ommatidium_radius' not in self.input_settings:
+            radius = 0.0
+        else:
+            radius = self.input_settings['ommatidium_radius']
         # 描画処理を実行
         self.render_images(base_file_name, base_camera,frame_start,frame_end,field_of_view, radius)
 
@@ -280,8 +291,8 @@ class SceneRenderer:
         print("output_color_path=",self.output_color_path)
         print("output_depth_path=",self.output_depth_path)
 
-def run(settings, hex_pos_settings, our_color_dir, output_depth_dir):
-    renderer = SceneRenderer(output_depth_format='OPEN_EXR', input_settings=hex_pos_settings)
+def run(scene_path,hex_pos_settings, color_image_dir,depth_image_dir,frame_index):
+    renderer = SceneRenderer(scene_path=scene_path,output_depth_format='OPEN_EXR', input_settings=hex_pos_settings,output_color_path=color_image_dir,output_depth_path=depth_image_dir, target_frame_index=frame_index)
     renderer.print()
     renderer.run()    
 
@@ -291,9 +302,10 @@ if __name__ == "__main__":
     'theta': 0,
     'phi': 0,
     'ommatidium_angle': 1.5,
+    'ommatidium_radius' : 1.0,
 }
 
-    renderer = SceneRenderer(output_depth_format='OPEN_EXR', input_settings=input_settings)
+    renderer = SceneRenderer(output_depth_format='OPEN_EXR', input_settings=input_settings, target_frame_index=0)
     renderer.print()
     renderer.run()
     
