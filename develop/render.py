@@ -1,4 +1,5 @@
 import os
+import shutil
 from step1_calculate_pixel_viewport.code import calculate_pixel_viewport
 from step2_batch_eye_rendering.code      import scene_renderer
 from step3_apply_hexigonal_filter.code   import apply_hexigonal_filter
@@ -10,7 +11,6 @@ def rander_frame(settings):
     output_dir = os.path.join(basedir,"output")
     print(color_image_dir)
     print(output_dir)
-
     hex_pos_setting = calculate_pixel_viewport.run(settings)
     scene_path = settings["scene_path"]
     frame_index = settings["frame"]
@@ -30,11 +30,11 @@ settings = {
     "image_format"         : "../step1-panorama-rendering/output_color/*.png",
     "interommatidial_angle": 1.5,
     "ommatidium_angle"     : 1.5,
-    "ommatidium_count"     : 4,
+    "ommatidium_count"     : 8,
     "ommatidium_radius"    : 0.00001,
-    "theta"                : 0,
-    "phi"                  : 0,
-    "filter"               : "hexagonal_gaussian",
+    "theta"                : 60,
+    "phi"                  : 100,
+    "filter"               : "hexagonal_depth_gaussian",
     "view_mode"            : "color",
     "debug_mode"           : True,
     "blur_size"            : 60,
