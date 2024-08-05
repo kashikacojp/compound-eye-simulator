@@ -229,7 +229,7 @@ class SceneRenderer:
             self.setup_rendering_frame(base_file_name_per_frame)
             bpy.context.scene.camera = camera
             # レンダリング実行
-            # bpy.ops.render.render(write_still=True)
+            bpy.ops.render.render(write_still=True)
             # 時間計測終了
             end = time.time()
             # 経過時間を表示(秒)
