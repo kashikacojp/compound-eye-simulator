@@ -76,9 +76,9 @@ class SceneRenderer:
         
         for device in cycles_preferences.devices:
             print ("supported device.name is "+device.type)
-#            if device.type == 'OPTIX':
-#                selected_device_type = device.type
-#                break
+            if device.type == 'OPTIX':
+                selected_device_type = device.type
+                break
             if device.type == 'CUDA':
                 selected_device_type = device.type
         
@@ -279,6 +279,11 @@ class SceneRenderer:
         print("output_path=",self.output_path)
         print("output_color_path=",self.output_color_path)
         print("output_depth_path=",self.output_depth_path)
+
+def run(hex_pos_settings):
+    renderer = SceneRenderer(output_depth_format='OPEN_EXR', input_settings=hex_pos_settings)
+    renderer.print()
+    renderer.run()    
 
 if __name__ == "__main__":
     input_settings = {

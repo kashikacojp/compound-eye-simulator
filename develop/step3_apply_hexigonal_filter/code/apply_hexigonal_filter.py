@@ -116,6 +116,13 @@ def process_frame(settings, color_image_files, depth_image_files, current_image_
 # def debug_filter(image, ommatidium_count, filter_size):
 #     return image
     
+def run(input_image_dir, ouput_image_dir, settings):
+    # Call function
+
+    # Save image to output directory
+    
+    print("Done.")
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Apply hexagonal filter for compound eye simulator')
     prompt = "TOML settings file (e.g., 'settings/*.toml'): "
