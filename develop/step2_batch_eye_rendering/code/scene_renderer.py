@@ -280,7 +280,7 @@ class SceneRenderer:
         print("output_color_path=",self.output_color_path)
         print("output_depth_path=",self.output_depth_path)
 
-def run(hex_pos_settings):
+def run(settings, hex_pos_settings, our_color_dir, output_depth_dir):
     renderer = SceneRenderer(output_depth_format='OPEN_EXR', input_settings=hex_pos_settings)
     renderer.print()
     renderer.run()    

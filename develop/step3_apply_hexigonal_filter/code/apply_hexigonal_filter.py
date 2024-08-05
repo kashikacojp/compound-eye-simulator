@@ -116,10 +116,15 @@ def process_frame(settings, color_image_files, depth_image_files, current_image_
 # def debug_filter(image, ommatidium_count, filter_size):
 #     return image
     
-def run(input_image_dir, ouput_image_dir, settings):
+def run(settings, color_image_dir, depth_image_dir, ouput_image_dir):
+    # 六角形の位置は、step1と全く同じ処理をすれば取得できる
+
     # Call function
 
+    result_image = kansu()
+
     # Save image to output directory
+    cv2.imwrite(os.path.join(output_image_dir, "output.png"), result_image)
     
     print("Done.")
 

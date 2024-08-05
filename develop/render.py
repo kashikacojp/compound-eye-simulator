@@ -7,6 +7,9 @@ settings = {
     "output_width":1920,
     "output_height": 1080,
     "image_format": "../step1-panorama-rendering/output_color/*.png",
+
+    # "scene_path": "path/to/scene.blend",
+
     "interommatidial_angle": 1.5,
     "ommatidium_angle": 1.5,
     "ommatidium_count": 25,
@@ -21,10 +24,11 @@ settings = {
 
 basedir = os.path.dirname(os.path.abspath(__file__))
 color_image_dir = os.path.join(basedir,"output","temp_color_image")
+depth_image_dir = os.path.join(basedir,"output","temp_depth_image")
 output_dir = os.path.join(basedir,"output")
 print(color_image_dir)
 print(output_dir)
 
 hex_pos_setting = calculate_pixel_viewport.run(settings)
-scene_renderer.run(hex_pos_setting, color_image_dir) # Generate Images in output_color/output_depth folder
-apply_hexigonal_filter.run(settings, output_dir) # Generate Images in output_color/output_depth folder
+scene_renderer.run(settings, hex_pos_setting, color_image_dir, depth_image_dir) # Generate Images in output_color/output_depth folder
+apply_hexigonal_filter.run(settings, color_image_dir, depth_image_dir, output_dir) 
