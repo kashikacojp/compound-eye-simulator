@@ -68,9 +68,8 @@ class SceneRenderer:
         bpy.context.scene.cycles.device                     = 'GPU'
         bpy.context.scene.use_nodes = True
         bpy.context.scene.view_layers["ViewLayer"].use_pass_z = True
-
         cycles_preferences = bpy.context.preferences.addons['cycles'].preferences
-        print(str(cycles_preferences))
+        cycles_preferences.get_devices()
 
         selected_device_type = None
         
@@ -280,8 +279,8 @@ class SceneRenderer:
         print("output_color_path=",self.output_color_path)
         print("output_depth_path=",self.output_depth_path)
 
-def run(hex_pos_settings):
-    renderer = SceneRenderer(output_depth_format='OPEN_EXR', input_settings=hex_pos_settings)
+def run(scene_path,hex_pos_settings, color_image_dir,depth_image_dir):
+    renderer = SceneRenderer(scene_path=scene_path,output_depth_format='OPEN_EXR', input_settings=hex_pos_settings,output_color_path=color_image_dir,output_depth_path=depth_image_dir)
     renderer.print()
     renderer.run()    
 

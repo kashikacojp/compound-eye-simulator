@@ -1,5 +1,5 @@
-from update_view_process import load_exr_depth
-from hexagonal_filter import get_hexagon_data, hexagonal_filter, hexagonal_gaussian_filter, hexagonal_depth_gaussian_filter, apply_uniform_blur
+from .update_view_process import load_exr_depth
+from .hexagonal_filter    import get_hexagon_data, hexagonal_filter, hexagonal_gaussian_filter, hexagonal_depth_gaussian_filter, apply_uniform_blur
 import cv2
 import sys
 import os
@@ -111,16 +111,31 @@ def process_frame(settings, color_image_files, depth_image_files, current_image_
         result_image = cv2.normalize(result_image, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
     
     # 結果を保存
-    cv2.imwrite(f"output_{current_image_index}.png", result_image)
+    return result_image
 
 # def debug_filter(image, ommatidium_count, filter_size):
 #     return image
     
-def run(input_image_dir, ouput_image_dir, settings):
+def run(settings,input_image_dir, output_image_dir):
+    # ソースディレクトリを取得
+    src_dir = os.path.dirname(os.path.abspath(__file__))
+    # テスト用の色画像ファイルを読み込む
+    # 現在はsrc_dir/../../step2-batch-eye-rendering/output_color/にあると仮定
+    color_image_format = input_image_dir+'/*.png'
+    # テスト用の深度画像ファイルを読み込む
+    # 現在はsrc_dir/../../step2-batch-eye-rendering/output_depth/にあると仮定
+    # .exrファイルを読み込む
+    depth_image_format = color_image_format.replace('color', 'depth').replace('.png', '.exr')
+    color_image_files = enumerate_image_files (color_image_format)
+    depth_image_files = enumerate_image_files (depth_image_format)
+    print (color_image_format)
+    print (depth_image_format)
+    # 次にファイルをすべて表示する
+    current_image_index = 0
+    output_image = process_frame(settings, color_image_files, depth_image_files, current_image_index)
     # Call function
-
     # Save image to output directory
-    
+    cv2.imwrite(output_image_dir + f"/output_{current_image_index}.png", output_image)
     print("Done.")
 
 if __name__ == "__main__":
