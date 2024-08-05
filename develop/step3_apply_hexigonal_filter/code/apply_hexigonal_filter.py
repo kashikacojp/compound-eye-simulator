@@ -139,8 +139,18 @@ def run(settings,input_image_dir, output_image_dir,frame_index):
     current_image_index = frame_index
     output_image = process_frame(settings, color_image_files, depth_image_files, current_image_index)
     # Call function
-    # Save image to output directory
-    cv2.imwrite(output_image_dir + f"/output_{current_image_index}.png", output_image)
+    # Save image to output directory 
+    # 出力ファイル名は, output_${filter_name}_0001.png, output_${filter_name}_0002.png, ...のようになる
+    filter_name = ""
+    if settings['debug_mode'] is True:
+        if settings['view_mode'] == 'color':
+            filter_name = "debug_color"
+        elif settings['view_mode'] == 'depth':
+            filter_name = "debug_depth"
+    else:
+        filter_name = settings['filter']
+    output_image_filename = os.path.join(output_image_dir, f"output_{filter_name}_{current_image_index:04d}.png")
+    cv2.imwrite(output_image_filename, output_image)
     print("Done.")
 
 if __name__ == "__main__":
