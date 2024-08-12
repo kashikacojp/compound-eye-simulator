@@ -16,7 +16,7 @@ def hexagon_corners(center, size):
         [x - w / 2, y + h / 4]
     ], dtype=np.int32)
 
-def get_hexagon_data(width, height, ommatidium_count, filter_size):
+def get_hexagon_data(width, height, ommatidium_count):
     
     # 六角形のサイズを計算
     hex_size = width / (ommatidium_count * math.sqrt(3))
@@ -65,12 +65,14 @@ def hexagonal_depth_gaussian_filter(image, depth_image, ommatidium_count, max_fi
     # Depthの最小値と最大値を取得
     depth_min = np.min(depth_image)
     depth_max = np.max(depth_image)
-    print("DEBUG: hexagonal_depth_gaussian_filter: depth_min = {}, depth_max = {}", depth_min, depth_max)
+    #print("DEBUG: hexagonal_depth_gaussian_filter: depth_min = {}, depth_max = {}", depth_min, depth_max)
     # 中心の深度値を取得
     depth_value = depth_image[height // 2, width // 2]
     depth_value = np.clip(depth_value, 0, 100.0)
     depth_ratio = depth_value / 100.0
-    filter_size = max(int(depth_ratio * max_filter_size), 1)
+    depth_ratio_exp = depth_ratio ** 0.2 # exponential scaling
+    filter_size = max(int(depth_ratio_exp * max_filter_size), 1)
+    print("DEBUG: hexagonal_depth_gaussian_filter: depth_value = {}, depth_ratio = {}, filter_size = {}".format(depth_value, depth_ratio_exp, filter_size))
 
     # ガウシアンカーネルを作成
     gaussian_kernel = cv2.getGaussianKernel(filter_size, -1)

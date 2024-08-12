@@ -55,7 +55,6 @@ def process_frame(settings, color_image_files, depth_image_files, current_image_
     output_width = settings['output_width']
     output_height = settings['output_height']
     ommatidium_count = settings['ommatidium_count']
-    filter_size = settings['blur_size']
     hex_index = 0
     # 出力画像を作成
     result_color_image = np.zeros((output_height, output_width, 3), dtype=np.uint8)
@@ -63,7 +62,7 @@ def process_frame(settings, color_image_files, depth_image_files, current_image_
     result_image = result_color_image
     if settings['debug_mode'] and settings['view_mode'] == 'depth':
         result_image = result_depth_image
-    for center_x, center_y, hex_size, hex_points, mask in get_hexagon_data(output_width, output_height, ommatidium_count, filter_size):        # 中心座標が画像の範囲内にあることを確認
+    for center_x, center_y, hex_size, hex_points, mask in get_hexagon_data(output_width, output_height, ommatidium_count):        # 中心座標が画像の範囲内にあることを確認
         # debug_modeの場合のみ特殊な扱いが必要
         color_image = cv2.imread( cur_color_image_files[hex_index])
         depth_image = load_exr_depth( cur_depth_image_files[hex_index])
@@ -103,7 +102,7 @@ def process_frame(settings, color_image_files, depth_image_files, current_image_
                 elif settings['filter'] == 'hexagonal_gaussian':
                     result_color = hexagonal_gaussian_filter(color_image, ommatidium_count, filter_size)
                 elif settings['filter'] == 'hexagonal_depth_gaussian':
-                    result_color = hexagonal_depth_gaussian_filter(color_image, depth_image, ommatidium_count, filter_size)
+                    result_color = hexagonal_depth_gaussian_filter(color_image, depth_image, ommatidium_count, color_image.shape[1])
                 # 六角形でresultに色を埋める
                 cv2.fillPoly(result_image, [hex_points], result_color)
                 
