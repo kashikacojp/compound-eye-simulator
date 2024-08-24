@@ -19,8 +19,12 @@ def copy_images_flat(root_path):
                 # 元のファイルのフルパス
                 src_file = os.path.join(dirpath, filename)
                 
+                # 新しいファイル名（重複を避けるため、相対パスを含める）
+                rel_path = os.path.relpath(dirpath, root_path)
+                new_filename = f"{rel_path.replace(os.sep, '_')}_{filename}"
+                
                 # 新しいファイルのフルパス
-                dst_file = os.path.join(new_folder, filename)
+                dst_file = os.path.join(new_folder, new_filename)
                 
                 # ファイルをコピー
                 shutil.copy2(src_file, dst_file)
@@ -32,7 +36,4 @@ def copy_images_flat(root_path):
 # 使用例
 if __name__ == "__main__":
     root_path = "radius=0.005"  # ここに実際のルートパスを指定してください
-    copy_images_flat(root_path)
-
-    root_path = "radius=0.0"  # ここに実際のルートパスを指定してください
     copy_images_flat(root_path)

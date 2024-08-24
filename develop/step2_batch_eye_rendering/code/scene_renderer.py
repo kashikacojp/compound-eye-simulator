@@ -3,6 +3,7 @@ import os
 from os.path import abspath
 import time
 import math
+import re
 from mathutils import Vector, Quaternion, Euler
 class SceneRenderer:
     scene_path            = None
@@ -102,6 +103,7 @@ class SceneRenderer:
         # Link all nodes
         links = world.node_tree.links
         link  = links.new(node_environment.outputs["Color"], node_background.inputs["Color"])
+        
     def setup_rendering_frame (self, base_file_name_per_frame):
         scene_node_tree = bpy.context.scene.node_tree
         # clear default nodes
@@ -137,6 +139,7 @@ class SceneRenderer:
         node_save_color.file_slots.clear()  # 既存のスロットをクリア
         node_save_color.file_slots.new('MyOutputImage')  # 新しいスロットを追加
         node_save_color.file_slots[0].path  = base_file_name_per_frame + '_' 
+
         node_save_depth = scene_node_tree.nodes.new('CompositorNodeOutputFile')
         node_save_depth.name = 'save_depth'
         node_save_depth.base_path =  self.output_depth_path
@@ -156,6 +159,37 @@ class SceneRenderer:
 
         scene_node_tree.links.new(output_color,node_save_color.inputs[0])
         scene_node_tree.links.new(output_depth,node_save_depth.inputs[0])
+
+    # 単体機能をテストしていた時に実装した関数。上記のノード設定を使用しているため現在は使用していない。
+    # def SetNode(self, scene):
+    #     print('MultiViewRendering')
+
+    #     # デプスパスを追加
+    #     scene.view_layers[0].use_pass_z = True
+        
+    #     # コンポジッターノードを設定してデプスを出力
+    #     scene.use_nodes = True
+    #     tree = scene.node_tree
+        
+    #     # 既存のノードをクリア
+    #     tree.nodes.clear()
+        
+    #     # レンダーレイヤーノードを追加
+    #     render_layers = tree.nodes.new(type='CompositorNodeRLayers')
+        
+    #     # ファイル出力ノードを追加 (カラー用)
+    #     file_output_color = tree.nodes.new(type='CompositorNodeOutputFile')
+    #     file_output_color.format.file_format = 'PNG'
+    #     file_output_color.base_path = "//render/color/"
+        
+    #     # ファイル出力ノードを追加 (デプス用)
+    #     file_output_depth = tree.nodes.new(type='CompositorNodeOutputFile')
+    #     file_output_depth.format.file_format = 'OPEN_EXR'
+    #     file_output_depth.base_path = "//render/depth/"
+        
+    #     # ノードを接続
+    #     tree.links.new(render_layers.outputs['Image'], file_output_color.inputs[0])
+    #     tree.links.new(render_layers.outputs['Depth'], file_output_depth.inputs[0])
 
     def rotate_camera(self, camera, base_location,base_radius, base_rotation,phi, theta):
         # base_locationは, カメラの位置を球面上に配置するための中心座標
@@ -193,6 +227,67 @@ class SceneRenderer:
             print("No camera found in the scene.")
         return base_camera
 
+    # マルチビュー対応：ビューをクリア
+    def ClearViews(self, scene):
+        default_views = {'left', 'right'}
+        views_to_remove = [view.name for view in scene.render.views if view.name not in default_views]
+        for view_name in views_to_remove:
+            scene.render.views.remove(scene.render.views[view_name])
+    
+    # マルチビュー対応：シーン内のカメラを取得
+    def GetSceneCameras(self, scene, camera_pattern=r'.+_(\d+)$'):
+        cameras = []
+        for obj in scene.objects:
+            if obj.type == 'CAMERA':
+                match = re.match(camera_pattern, obj.name)
+                if match:
+                    #print(f"Matched camera: {obj.name}")
+                    suffix = match.group(1).lower()
+                    cameras.append((obj, suffix))
+        return cameras
+
+    # マルチビュー対応：ビューを設定
+    def SetupViews(self, scene):
+        print('SetupViews')
+        cameras = self.GetSceneCameras(scene)
+        print('number of cameras: {}'.format(len(cameras)))
+        for camera, suffix in cameras:
+            #print('camera: {}, suffix: {}'.format(camera.name, suffix))
+            if suffix not in scene.render.views:
+                view = scene.render.views.new(name=suffix)
+            else:
+                view = scene.render.views[suffix]
+            view.camera_suffix = '_' + suffix.upper()
+
+    # マルチビュー対応：マルチビューを設定
+    def SetMultiView(self, scene):
+        print('SetMultiView')
+        scene.render.use_multiview = True
+        scene.render.views_format = 'MULTIVIEW'
+        scene.render.views['left'].use = False # Default left
+        scene.render.views['right'].use = False # Default right
+        self.ClearViews(scene)
+        self.SetupViews(scene)
+
+    # マルチビュー対応：マルチビューを設定
+    def SetupMultiView(self):
+        print('SetupMultiView')
+        scene = bpy.context.scene
+        self.SetMultiView(scene)
+        #SetNode(scene)
+
+    # マルチビュー対応：カメラを削除
+    def CheckAndRemoveCamera(self):
+        # 削除するカメラのリストを作成
+        cameras_to_remove = [obj for obj in bpy.data.objects
+                             if obj.type == 'CAMERA' and obj.name != 'Camera']
+        
+        # カメラを削除
+        for camera in cameras_to_remove:
+            bpy.data.objects.remove(camera, do_unlink=True)
+        
+        print(f"{len(cameras_to_remove)} cameras removed.")      
+
     def render_frame_image(self,base_filename, base_camera, frame_index, field_of_view, radius):
         # 
         phi = self.input_settings['phi']
@@ -203,15 +298,15 @@ class SceneRenderer:
         camera_location = base_camera.location
         # ベースカメラの姿勢を取得
         camera_rotation = base_camera.rotation_euler
+        self.CheckAndRemoveCamera() # ベース以外の既存カメラを削除
         cameras = []
-        i = 0
-        for center in self.input_settings['centers']:
+        for idx, center in enumerate(self.input_settings['centers']): # python においてenumerate()を使用することで、0から始まるindexと要素を同時に取得できる
             # 見つかったカメラを複製する
             camera      = base_camera.copy()
             camera.data = base_camera.data.copy()
             # animationをクリア
             camera.animation_data_clear()
-            camera.name = base_camera.name + '_center_' + str(i) + '_frame_' + str(frame_index)
+            camera.name = base_camera.name + '_frame_' + str(frame_index) + '_center_' + f'{idx:04d}' # 湖岸番号とフレーム番号を逆転
             # 複製したカメラオブジェクトを現在のシーンにリンク
             camera.data.type           = 'PERSP'
             camera.data.clip_start     = base_camera.data.clip_start
@@ -226,20 +321,23 @@ class SceneRenderer:
             # 
             bpy.context.collection.objects.link(camera)
             cameras.append(camera)
-            # 時間計測開始
-            beg = time.time()
-            # 出力ファイル名は, image_${i}.png
-            base_file_name_per_frame = base_filename + '_' +  str(i).zfill(4)
-            # レンダリング設定のセットアップ
-            self.setup_rendering_frame(base_file_name_per_frame)
-            bpy.context.scene.camera = camera
-            # レンダリング実行
-            bpy.ops.render.render(write_still=True)
-            # 時間計測終了
-            end = time.time()
-            # 経過時間を表示(秒)
-            print("Time:", end - beg)
-            i = i+1
+            
+        # Color/Depthレンダリング用のNodeを設定
+        self.setup_rendering_frame(base_filename)
+        bpy.context.scene.camera = cameras[0] # MultiViewレンダリング時ベースカメラだとエラーとなるため、カメラを変更
+
+        # マルチビューレンダリングを設定
+        self.SetupMultiView()
+
+        # 時間計測開始
+        beg = time.time()
+
+        # レンダリング実行
+        bpy.ops.render.render()
+                
+        # 時間計測終了
+        end = time.time()
+        print("Rendering Time:", end - beg)
 
     def render_images(self,base_filename,base_camera, frame_start, frame_end, field_of_view, radius):
         # フレーム番号を開始から終了まで繰り返す
@@ -252,7 +350,7 @@ class SceneRenderer:
             self.render_frame_image(base_filename, base_camera,frame_index,field_of_view, radius)
 
         
-    def run(self):
+    def run(self):        
         width   = 100
         height  = 100
         samples = 10
@@ -296,16 +394,17 @@ def run(scene_path,hex_pos_settings, color_image_dir,depth_image_dir,frame_index
     renderer.print()
     renderer.run()    
 
-if __name__ == "__main__":
-    input_settings = {
-    'centers': [(-6.0, -3.375), (-4.5, -3.375), (-3.0, -3.375), (-1.5, -3.375), (0.0, -3.375), (1.5, -3.375), (3.0, -3.375), (4.5, -3.375), (-5.25, -2.08125), (-3.75, -2.08125), (-2.25, -2.08125), (-0.75, -2.08125), (0.75, -2.08125), (2.25, -2.08125), (3.75, -2.08125), (5.25, -2.08125), (-6.0, -0.78125), (-4.5, -0.78125), (-3.0, -0.78125), (-1.5, -0.78125), (0.0, -0.78125), (1.5, -0.78125), (3.0, -0.78125), (4.5, -0.78125), (-5.25, 0.51875), (-3.75, 0.51875), (-2.25, 0.51875), (-0.75, 0.51875), (0.75, 0.51875), (2.25, 0.51875), (3.75, 0.51875), (5.25, 0.51875), (-6.0, 1.81875), (-4.5, 1.81875), (-3.0, 1.81875), (-1.5, 1.81875), (0.0, 1.81875), (1.5, 1.81875), (3.0, 1.81875), (4.5, 1.81875), (-5.25, 3.11875), (-3.75, 3.11875), (-2.25, 3.11875), (-0.75, 3.11875), (0.75, 3.11875), (2.25, 3.11875), (3.75, 3.11875), (5.25, 3.11875)],      
-    'theta': 0,
-    'phi': 0,
-    'ommatidium_angle': 1.5,
-    'ommatidium_radius' : 1.0,
-}
+# テスト用。render.pyを称した場合動作しないはずなので、コメントアウト。エラーが出るようなら意図しないパスで処理が動いている。
+# if __name__ == "__main__":
+#     input_settings = {
+#     'centers': [(-6.0, -3.375), (-4.5, -3.375), (-3.0, -3.375), (-1.5, -3.375), (0.0, -3.375), (1.5, -3.375), (3.0, -3.375), (4.5, -3.375), (-5.25, -2.08125), (-3.75, -2.08125), (-2.25, -2.08125), (-0.75, -2.08125), (0.75, -2.08125), (2.25, -2.08125), (3.75, -2.08125), (5.25, -2.08125), (-6.0, -0.78125), (-4.5, -0.78125), (-3.0, -0.78125), (-1.5, -0.78125), (0.0, -0.78125), (1.5, -0.78125), (3.0, -0.78125), (4.5, -0.78125), (-5.25, 0.51875), (-3.75, 0.51875), (-2.25, 0.51875), (-0.75, 0.51875), (0.75, 0.51875), (2.25, 0.51875), (3.75, 0.51875), (5.25, 0.51875), (-6.0, 1.81875), (-4.5, 1.81875), (-3.0, 1.81875), (-1.5, 1.81875), (0.0, 1.81875), (1.5, 1.81875), (3.0, 1.81875), (4.5, 1.81875), (-5.25, 3.11875), (-3.75, 3.11875), (-2.25, 3.11875), (-0.75, 3.11875), (0.75, 3.11875), (2.25, 3.11875), (3.75, 3.11875), (5.25, 3.11875)],      
+#     'theta': 0,
+#     'phi': 0,
+#     'ommatidium_angle': 1.5,
+#     'ommatidium_radius' : 1.5,
+# }
 
-    renderer = SceneRenderer(output_depth_format='OPEN_EXR', input_settings=input_settings, target_frame_index=0)
-    renderer.print()
-    renderer.run()
+#     renderer = SceneRenderer(output_depth_format='OPEN_EXR', input_settings=input_settings, target_frame_index=0)
+#     renderer.print()
+#     renderer.run()
     

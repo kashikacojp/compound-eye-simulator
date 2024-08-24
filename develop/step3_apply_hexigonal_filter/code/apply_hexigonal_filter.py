@@ -23,9 +23,9 @@ def enumerate_image_files(image_format):
     for image_tmp_file in image_tmp_files:
         filename = os.path.basename(image_tmp_file)
         # ommatidium_numberは, filenameを'_'で分割したときの2番目の要素
-        ommatidium_number = int(filename.split('_')[1])
+        ommatidium_number = int(filename.split('_')[2].split('.')[0])
         # image_numberは, filenameを'_'で分割したときの3番目の要素
-        image_number = int(filename.split('_')[2].split('.')[0])
+        image_number = int(filename.split('_')[1])
         max_image_number = max(max_image_number, image_number)
         min_image_number = min(min_image_number, image_number)
         max_ommatidium_number = max(max_ommatidium_number, ommatidium_number)
@@ -34,9 +34,9 @@ def enumerate_image_files(image_format):
     for image_tmp_file in image_tmp_files:
         filename = os.path.basename(image_tmp_file)
         # ommatidium_numberは, filenameを'_'で分割したときの2番目の要素
-        ommatidium_number = int(filename.split('_')[1])
+        ommatidium_number = int(filename.split('_')[2].split('.')[0])
         # image_numberは, filenameを'_'で分割したときの3番目の要素
-        image_number = int(filename.split('_')[2].split('.')[0])
+        image_number = int(filename.split('_')[1])
         # image_filesがNoneの場合, image_filesを初期化
         # キーはimage_number, 値はmax_ommatidium_number個のstring型の配列
         if image_files is None:
@@ -110,7 +110,7 @@ def process_frame(settings, color_image_files, depth_image_files, current_image_
 
     # if not settings['debug_mode']:
     #     # 平滑化フィルタを適用
-    result_image = apply_uniform_blur(result_image, settings['blur_size'])
+    #result_image = apply_uniform_blur(result_image, settings['blur_size'])
 
     if settings['debug_mode'] and settings['view_mode'] == 'depth':
         # 画像の範囲を0-255に変換
