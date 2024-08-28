@@ -12,7 +12,11 @@ def load_exr_depth(filename):
     dw = file.header()['dataWindow']
     size = (dw.max.x - dw.min.x + 1, dw.max.y - dw.min.y + 1)
     print ('load_exr_depth: size = {}'.format(size))
-    depth_str = file.channel('R', Imath.PixelType(Imath.PixelType.FLOAT))
+    # file がRチャンネルを持っていることを確認
+    if 'R' in file.header()['channels']:
+        depth_str = file.channel('R', Imath.PixelType(Imath.PixelType.FLOAT))
+    if 'V' in file.header()['channels']:
+        depth_str = file.channel('V', Imath.PixelType(Imath.PixelType.FLOAT))
     depth_array = array.array('f', depth_str)
     depth_image = np.array(depth_array).reshape(size[1], size[0])
 
