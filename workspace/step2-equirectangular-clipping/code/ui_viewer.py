@@ -125,75 +125,95 @@ class UIViewer:
         self.setup_ui()
 
     def setup_ui(self):
+        row_idx = 0
         interommatidial_angle_label = tk.Label(self.ui_frame, text="個眼間角度")
         interommatidial_angle_entry = tk.Entry(self.ui_frame, textvariable=self.ui_input_interommatidial_angle)
-        interommatidial_angle_label.grid(row=0, column=0, columnspan=3)
-        interommatidial_angle_entry.grid(row=1, column=0, columnspan=3)
+        interommatidial_angle_label.grid(row=row_idx, column=0, columnspan=3)
+        row_idx = row_idx + 1
+        interommatidial_angle_entry.grid(row=row_idx, column=0, columnspan=3)
+        row_idx = row_idx + 1
         interommatidial_angle_entry.insert (0, self.settings['interommatidial_angle'])
 
         ommatidium_angle_label = tk.Label(self.ui_frame, text="個眼視野角")
         ommatidium_angle_entry = tk.Entry(self.ui_frame, textvariable=self.ui_input_ommatidium_angle)
-        ommatidium_angle_label.grid(row=2, column=0, columnspan=3)
-        ommatidium_angle_entry.grid(row=3, column=0, columnspan=3)
+        ommatidium_angle_label.grid(row=row_idx, column=0, columnspan=3)
+        row_idx = row_idx + 1
+        ommatidium_angle_entry.grid(row=row_idx, column=0, columnspan=3)
+        row_idx = row_idx + 1
         ommatidium_angle_entry.insert (0, self.settings['ommatidium_angle'])
 
         ommatidium_count_label = tk.Label(self.ui_frame, text="個眼個数")
         ommatidium_count_entry = tk.Entry(self.ui_frame, textvariable=self.ui_input_ommatidium_count)
-        ommatidium_count_label.grid(row=4, column=0, columnspan=3)
-        ommatidium_count_entry.grid(row=5, column=0, columnspan=3)
+        ommatidium_count_label.grid(row=row_idx, column=0, columnspan=3)
+        row_idx = row_idx + 1
+        ommatidium_count_entry.grid(row=row_idx, column=0, columnspan=3)
+        row_idx = row_idx + 1
         ommatidium_count_entry.insert (0, self.settings['ommatidium_count'])
 
         filter_label = tk.Label(self.ui_frame, text="フィルタ切り替え")
         #filter_combobox = ttk.Combobox(self.ui_frame, values=["none","hexagonal", "hexagonal_gaussian", "hexagonal_depth_gaussian","debug_color","debug_depth"], textvariable=self.ui_input_filter)
         filter_combobox = ttk.Combobox(self.ui_frame, values=[self.convert_filter_name_reverse("none"),self.convert_filter_name_reverse("hexagonal"), self.convert_filter_name_reverse("hexagonal_depth_gaussian")], textvariable=self.ui_input_filter)
         filter_combobox.set (self.convert_filter_name_reverse(self.settings['filter']))
-        filter_label.grid(row=6, column=0, columnspan=3)
-        filter_combobox.grid(row=7, column=0, columnspan=3)
+        filter_label.grid(row=row_idx, column=0, columnspan=3)
+        row_idx = row_idx + 1
+        filter_combobox.grid(row=row_idx, column=0, columnspan=3)
+        row_idx = row_idx + 1
 
         blur_label = tk.Label(self.ui_frame, text="ぼかしサイズ")
         blur_slider = tk.Scale(self.ui_frame, from_=0.0, to=1.0, resolution=0.01, orient=tk.HORIZONTAL, variable=self.ui_blur_size)
         blur_slider.set(0.5)
-        blur_label.grid(row=8, column=0, columnspan=3)
-        blur_slider.grid(row=9, column=0, columnspan=3)
+        blur_label.grid(row=row_idx, column=0, columnspan=3)
+        row_idx = row_idx + 1
+        blur_slider.grid(row=row_idx, column=0, columnspan=3)
+        row_idx = row_idx + 1
 
         apply_button = tk.Button(self.ui_frame, text="変更の適用", command=self.on_apply_click)
-        apply_button.grid(row=10, columnspan=3, sticky=tk.N+tk.S+tk.E+tk.W)
+        apply_button.grid(row=row_idx, columnspan=3, sticky=tk.N+tk.S+tk.E+tk.W)
+        row_idx = row_idx + 1
 
         view_control_label = tk.Label(self.ui_frame, text="視点操作(上下左右)")
-        view_control_label.grid(row=11, column=0, columnspan=3)
+        view_control_label.grid(row=row_idx, column=0, columnspan=3)
+        row_idx = row_idx + 1
 
         up_button = tk.Button(self.ui_frame, text="上", command=self.on_up_click)
         down_button = tk.Button(self.ui_frame, text="下", command=self.on_down_click)
         left_button = tk.Button(self.ui_frame, text="左", command=self.on_left_click)
         right_button = tk.Button(self.ui_frame, text="右", command=self.on_right_click)
-        up_button.grid(row=12, column=1, columnspan=1, sticky=tk.N+tk.S+tk.E+tk.W)
-        left_button.grid(row=13, column=0, columnspan=1, sticky=tk.N+tk.S+tk.E+tk.W)
-        down_button.grid(row=13, column=1, columnspan=1, sticky=tk.N+tk.S+tk.E+tk.W)
-        right_button.grid(row=13, column=2, columnspan=1, sticky=tk.N+tk.S+tk.E+tk.W)
+        up_button.grid(row=row_idx, column=1, columnspan=1, sticky=tk.N+tk.S+tk.E+tk.W)
+        row_idx = row_idx + 1
+        left_button.grid(row=row_idx, column=0, columnspan=1, sticky=tk.N+tk.S+tk.E+tk.W)
+        down_button.grid(row=row_idx, column=1, columnspan=1, sticky=tk.N+tk.S+tk.E+tk.W)
+        right_button.grid(row=row_idx, column=2, columnspan=1, sticky=tk.N+tk.S+tk.E+tk.W)
+        row_idx = row_idx + 1
 
 
         move_image_label = tk.Label(self.ui_frame, text="画像の変更(+1, -1, +10, -10)")
-        move_image_label.grid(row=14, column=0, columnspan=3)
+        move_image_label.grid(row=row_idx, column=0, columnspan=3)
+        row_idx = row_idx + 1
 
         prev_1frame_image_button = tk.Button(self.ui_frame, text="前の画像(-1)", command=self.on_prev_1frame_image)
-        prev_1frame_image_button.grid(row=15, column=0, columnspan=1,  sticky=tk.N+tk.S+tk.E+tk.W)
+        prev_1frame_image_button.grid(row=row_idx, column=0, columnspan=1,  sticky=tk.N+tk.S+tk.E+tk.W)
         next_1frame_image_button = tk.Button(self.ui_frame, text="次の画像(+1)", command=self.on_next_1frame_image)
-        next_1frame_image_button.grid(row=15, column=2, columnspan=1, sticky=tk.N+tk.S+tk.E+tk.W)
+        next_1frame_image_button.grid(row=row_idx, column=2, columnspan=1, sticky=tk.N+tk.S+tk.E+tk.W)
+        row_idx = row_idx + 1
 
         prev_10frame_image_button = tk.Button(self.ui_frame, text="前の画像(-10)", command=self.on_prev_10frame_image)
-        prev_10frame_image_button.grid(row=16, column=0, columnspan=1,  sticky=tk.N+tk.S+tk.E+tk.W)
+        prev_10frame_image_button.grid(row=row_idx, column=0, columnspan=1,  sticky=tk.N+tk.S+tk.E+tk.W)
         next_10frame_image_button = tk.Button(self.ui_frame, text="次の画像(+10)", command=self.on_next_10frame_image)
-        next_10frame_image_button.grid(row=16, column=2, columnspan=1, sticky=tk.N+tk.S+tk.E+tk.W)
-
+        next_10frame_image_button.grid(row=row_idx, column=2, columnspan=1, sticky=tk.N+tk.S+tk.E+tk.W)
+        row_idx = row_idx + 1
 
         save_view_image_button = tk.Button(self.ui_frame, text="現在の視点画像を保存", command=self.on_save_view_image_click)
-        save_view_image_button.grid(row=17, column=0, columnspan=3, sticky=tk.N+tk.S+tk.E+tk.W)
+        save_view_image_button.grid(row=row_idx, column=0, columnspan=3, sticky=tk.N+tk.S+tk.E+tk.W)
+        row_idx = row_idx + 1
 
         save_settings_button = tk.Button(self.ui_frame, text="設定ファイル保存(.toml)", command=self.on_save_settings_click)
-        save_settings_button.grid(row=18, column=0, columnspan=3, sticky=tk.N+tk.S+tk.E+tk.W)
+        save_settings_button.grid(row=row_idx, column=0, columnspan=3, sticky=tk.N+tk.S+tk.E+tk.W)
+        row_idx = row_idx + 1
 
         run_ommatidium_button = tk.Button(self.ui_frame, text="個眼毎にレンダリング", command=self.on_run_ommatidium_click)
-        run_ommatidium_button.grid(row=19, column=0, columnspan=3, sticky=tk.N+tk.S+tk.E+tk.W)
+        run_ommatidium_button.grid(row=row_idx, column=0, columnspan=3, sticky=tk.N+tk.S+tk.E+tk.W)
+        row_idx = row_idx + 1
         
     def run(self):
         self.update_view()
