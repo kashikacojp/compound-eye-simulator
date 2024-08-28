@@ -305,7 +305,7 @@ class SceneRenderer:
         # thetaの回転を適用
         # 回転軸はlocal_x_axis
         # 回転角はtheta
-        rotation_matrix = Quaternion(local_x_axis, -phi).to_matrix().to_4x4() @ rotation_matrix
+        rotation_matrix = Quaternion(local_x_axis, phi).to_matrix().to_4x4() @ rotation_matrix
         return new_camera_rotation @ rotation_matrix
 
     def render_frame_image(self,base_filename, base_camera, frame_index, field_of_view, radius):
