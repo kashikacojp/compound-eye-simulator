@@ -209,8 +209,8 @@ class SceneRenderer:
         # 回転角はtheta
         rotation_matrix = Quaternion(local_x_axis, -theta).to_matrix().to_4x4() @ rotation_matrix
         # カメラの姿勢として設定
-        camera.matrix_world = camera.matrix_world @ rotation_matrix
-        view_vector         = camera.matrix_world.to_3x3() @ Vector((0.0, 0.0, -1.0))
+        camera.matrix_world = base_rotation @ rotation_matrix
+        view_vector         = base_rotation.to_3x3() @ Vector((0.0, 0.0, -1.0))
         camera.location     = base_location + view_vector * base_radius
         
     def find_base_camera(self):
@@ -289,12 +289,24 @@ class SceneRenderer:
         print(f"{len(cameras_to_remove)} cameras removed.")      
 
     def rotate_base_camera(self, camera_rotation, theta, phi):
-
         new_camera_rotation = camera_rotation.copy()
-
-        print("TODO: theta, phiで回転")
-
-        return new_camera_rotation
+        # base_locationは, カメラの位置を球面上に配置するための中心座標
+        # base_radius  は, カメラの位置を球面上に配置するための半径
+        # base_rotationは, カメラの姿勢を決定するための基準となる回転
+        # phi, thetaはそれぞれ極座標系におけるカメラの位置と姿勢を決定するための角度
+        # camera座標系におけるlocalな各軸を取得
+        local_x_axis = Vector((1, 0, 0))
+        local_y_axis = Vector((0, 1, 0))
+        local_z_axis = Vector((0, 0,-1))
+        # phiの回転を適用
+        # 回転軸はlocal_y_axis
+        # 回転角はphi
+        rotation_matrix = Quaternion(local_y_axis,theta).to_matrix().to_4x4()
+        # thetaの回転を適用
+        # 回転軸はlocal_x_axis
+        # 回転角はtheta
+        rotation_matrix = Quaternion(local_x_axis, -phi).to_matrix().to_4x4() @ rotation_matrix
+        return new_camera_rotation @ rotation_matrix
 
     def render_frame_image(self,base_filename, base_camera, frame_index, field_of_view, radius):
         # 
@@ -305,10 +317,10 @@ class SceneRenderer:
         # ベースカメラの位置を取得
         camera_location = base_camera.location
         # ベースカメラの姿勢を取得
-        camera_rotation = base_camera.rotation_euler
+        camera_rotation = base_camera.matrix_world
 
         # ベースカメラをtheta/phiで追加回転
-        camera_rotation = self.rotate_base_camera(camera_rotation, theta, phi) # theta, phiはsettingの値
+        camera_rotation = self.rotate_base_camera(camera_rotation, theta* 3.141592653589793 / 180.0, phi* 3.141592653589793 / 180.0) # theta, phiはsettingの値
 
 
 
