@@ -116,6 +116,7 @@ class UIViewer:
         self.ui_input_interommatidial_angle = tk.StringVar()
         self.ui_input_ommatidium_angle      = tk.StringVar()
         self.ui_input_ommatidium_count      = tk.StringVar()
+        self.ui_input_frame                 = tk.StringVar()
         self.ui_input_filter                = tk.StringVar()
         self.ui_blur_size                   = tk.DoubleVar()
 
@@ -186,6 +187,17 @@ class UIViewer:
         right_button.grid(row=row_idx, column=2, columnspan=1, sticky=tk.N+tk.S+tk.E+tk.W)
         row_idx = row_idx + 1
 
+        frame_count_label = tk.Label(self.ui_frame, text="フレーム番号")
+        frame_count_entry = tk.Entry(self.ui_frame, textvariable=self.ui_input_frame)
+        frame_count_label.grid(row=row_idx, column=0, columnspan=3)
+        row_idx = row_idx + 1
+        frame_count_entry.grid(row=row_idx, column=0, columnspan=3)
+        row_idx = row_idx + 1
+        frame_count_entry.insert (0, self.settings['frame'])
+
+        apply_frame_button = tk.Button(self.ui_frame, text="変更の適用", command=self.on_apply_frame_click)
+        apply_frame_button.grid(row=row_idx, column=0, columnspan=3, sticky=tk.N+tk.S+tk.E+tk.W)
+        row_idx = row_idx + 1
 
         move_image_label = tk.Label(self.ui_frame, text="画像の変更(+1, -1, +10, -10)")
         move_image_label.grid(row=row_idx, column=0, columnspan=3)
@@ -279,6 +291,13 @@ class UIViewer:
 
         if should_update:
             self.update_view()
+
+    def on_apply_frame_click(self):
+        new_frame = int(self.ui_input_frame.get())
+        if new_frame != self.settings['frame']:
+            self.settings['frame'] = new_frame
+            self.update_view()
+            self.update_title()
 
     def update_blur_size(self, value):
         hex_width = 1920 / int(self.ui_input_ommatidium_count.get())
