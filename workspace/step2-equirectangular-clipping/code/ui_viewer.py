@@ -294,10 +294,13 @@ class UIViewer:
 
     def on_apply_frame_click(self):
         new_frame = int(self.ui_input_frame.get())
-        if new_frame != self.settings['frame']:
-            self.settings['frame'] = new_frame
-            self.update_view()
-            self.update_title()
+        if new_frame < 0 or new_frame >= len(self.image_files):
+            new_frame = 0
+            self.ui_input_frame.set(new_frame)
+        
+        self.settings['frame'] = new_frame
+        self.update_view()
+        self.update_title()
 
     def update_blur_size(self, value):
         hex_width = 1920 / int(self.ui_input_ommatidium_count.get())
