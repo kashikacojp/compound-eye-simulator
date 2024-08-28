@@ -110,7 +110,7 @@ def process_frame(settings, color_image_files, depth_image_files, current_image_
 
     # if not settings['debug_mode']:
     #     # 平滑化フィルタを適用
-    #result_image = apply_uniform_blur(result_image, settings['blur_size'])
+    result_image = apply_uniform_blur(result_image, settings['blur_size'])
 
     if settings['debug_mode'] and settings['view_mode'] == 'depth':
         # 画像の範囲を0-255に変換

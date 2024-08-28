@@ -34,21 +34,22 @@ def rander_frame(settings):
 
 
 def render_animation(settings):
-    total_frame = 600
-    frames            = range(1, total_frame + 1, 3) 
-    for frame in frames:
-        settings["frame"] = frame
-        rander_frame(settings)
+    # total_frame = 600
+    # frames            = range(1, total_frame + 1, 3) 
+    # for frame in frames:
+    #     settings["frame"] = frame
+    #     rander_frame(settings)
     
-    frames            = range(2, total_frame + 1, 3) 
-    for frame in frames:
-        settings["frame"] = frame
-        rander_frame(settings)
+    # frames            = range(2, total_frame + 1, 3) 
+    # for frame in frames:
+    #     settings["frame"] = frame
+    #     rander_frame(settings)
 
-    frames            = range(3, total_frame + 1, 3) 
-    for frame in frames:
-        settings["frame"] = frame
-        rander_frame(settings)
+    # frames            = range(3, total_frame + 1, 3) 
+    # for frame in frames:
+    #     settings["frame"] = frame
+    #     rander_frame(settings)
+    rander_frame(settings)
 
 # setting
 settings = {
@@ -65,7 +66,7 @@ settings = {
     "filter"               : "hexagonal_depth_gaussian",
     "view_mode"            : "color",
     "debug_mode"           : True,
-    "blur_size"            : 60,
-    "frame"                : 1
+    "blur_size"            : 90,
+    "frame"                : 275
 }
 render_animation(settings)
