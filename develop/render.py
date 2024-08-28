@@ -53,6 +53,13 @@ def show_result_image(path,settings):
                 # messagebox.showinfo("Image Saved", f"Image saved to {save_path}")
                 messagebox.showinfo("save_image", f"画像を{save_path}に保存しました")
     image = cv2.imread(path)
+    if settings["clipping"]:           
+        output_width = settings["output_width"]
+        ommatidium_count = settings["ommatidium_count"]
+        new_output_width = output_width *(ommatidium_count-0.5) / ommatidium_count
+        new_output_width = int(new_output_width)
+        new_output_height= settings["output_height"]
+        image = image[0:new_output_height, 0:new_output_width]
     # Tkinterアプリケーションを作成して実行
     root = tk.Tk()
     app = ImageApp(root, image)
