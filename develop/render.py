@@ -4,6 +4,9 @@ from step1_calculate_pixel_viewport.code import calculate_pixel_viewport
 from step2_batch_eye_rendering.code      import scene_renderer
 from step3_apply_hexigonal_filter.code   import apply_hexigonal_filter
 
+def show_result_image(path):
+    # ここに画像を表示する処理を書く
+    
 def rander_frame(settings):
     basedir = os.path.dirname(os.path.abspath(__file__))
     color_image_dir = os.path.join(basedir,"output","temp_color_image", "radius"+str(settings["ommatidium_radius"]),"frame"+str(settings["frame"]))
@@ -31,7 +34,9 @@ def rander_frame(settings):
     for file in os.listdir(output_dir):
         if file.endswith(".png"):
             os.rename(os.path.join(output_dir, file), os.path.join(radius_output_dir, file))
-
+    
+    result_image_path = "" # ここに結果の画像のパスを入れる
+    show_result_image(result_image_path)
 
 def render_animation(settings):
     # total_frame = 600
