@@ -11,6 +11,7 @@ def show_result_image(setting, path):
     # クリッピングのサイズは、x = x - 出力画像横幅 / 個眼個数 * 0.5, yは変えない
 
     # showする
+    return
 
 def rander_frame(settings):
     basedir = os.path.dirname(os.path.abspath(__file__))
@@ -63,7 +64,7 @@ def render_animation(settings):
 
 # setting
 settings = {
-    "scene_path"           : "E:/yaikeda/Project/20240625_compound-eye-simulator/scene/purple/20240726/flower_middle.blend", 
+    "scene_path"           : "D:/Users/shums/kasika/20240703/flower_middle_for_debug.blend", 
     "output_width"         : 1920,
     "output_height"        : 1080,
     "image_format"         : "../step1-panorama-rendering/output_color/*.png",
