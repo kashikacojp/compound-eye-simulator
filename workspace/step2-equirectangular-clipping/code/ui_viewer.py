@@ -11,6 +11,7 @@ import os
 import tomllib
 import tomli_w
 import time
+import subprocess
 from PIL import Image, ImageTk
 from update_view_process import update_view_process
 
@@ -109,7 +110,7 @@ class UIViewer:
         self.imageItemID = self.canvas.create_image(0, 0, image=self.image_tk, anchor='nw')
         # # UIフレームを作成
         self.ui_frame    = tk.Frame(self.master)
-        self.ui_frame.place(x=0, y=0, width=self.screen_width/7, height=self.screen_height*0.6)
+        self.ui_frame.place(x=0, y=0, width=self.screen_width/7, height=self.screen_height*0.8)
         self.ui_frame_is_focused = False
 
         self.ui_input_interommatidial_angle = tk.StringVar()
@@ -190,6 +191,9 @@ class UIViewer:
 
         save_settings_button = tk.Button(self.ui_frame, text="設定ファイル保存(.toml)", command=self.on_save_settings_click)
         save_settings_button.grid(row=18, column=0, columnspan=3, sticky=tk.N+tk.S+tk.E+tk.W)
+
+        run_ommatidium_button = tk.Button(self.ui_frame, text="個眼毎にレンダリング", command=self.on_run_ommatidium_click)
+        run_ommatidium_button.grid(row=19, column=0, columnspan=3, sticky=tk.N+tk.S+tk.E+tk.W)
         
     def run(self):
         self.update_view()
@@ -320,6 +324,51 @@ class UIViewer:
 
     def on_save_settings_click(self):
         self.save_settings()
+
+    def on_run_ommatidium_click(self):
+        cur_script_path = os.path.abspath(__file__)
+        dst_script_path = os.path.normpath(os.path.join(os.path.dirname(cur_script_path), "..\\..\\..\\develop\\render.py"))
+        params = ""
+        if 'scene_path' in self.settings:
+            params = params + f" --scene_path {self.settings['scene_path']}"
+        if 'output_width' in self.settings:
+            params = params + f" --output_width {self.settings['output_width']}"
+        if 'output_height' in self.settings:
+            params = params + f" --output_height {self.settings['output_height']}"
+        if 'image_format' in self.settings:
+            params = params + f" --image_format {self.settings['image_format']}"
+        if 'interommatidial_angle' in self.settings:
+            params = params + f" --interommatidial_angle {self.settings['interommatidial_angle']}"
+        if 'ommatidium_angle' in self.settings:
+            params = params + f" --ommatidium_angle {self.settings['ommatidium_angle']}"
+        if 'ommatidium_count' in self.settings:
+            params = params + f" --ommatidium_count {self.settings['ommatidium_count']}"
+        if 'theta' in self.settings:
+            params = params + f" --theta {self.settings['theta']}"
+        if 'phi' in self.settings:
+            params = params + f" --phi {self.settings['phi']}"
+        if 'filter' in self.settings:
+            params = params + f" --filter {self.settings['filter']}"
+        if 'view_mode' in self.settings:
+            params = params + f" --view_mode {self.settings['view_mode']}"
+        if 'debug_mode' in self.settings:
+            if self.settings['debug_mode']:
+                params = params + " --debug_mode"
+        if 'blur_size' in self.settings:
+            params = params + f" --blur_size {self.settings['blur_size']}"
+        if 'frame' in self.settings:
+            params = params + f" --frame {self.settings['frame']}"
+        if 'clipping' in self.settings:
+            if self.settings['clipping']:
+                params = params + " --clipping"
+        else:
+            params = params + " --clipping"
+        print (f"実行コマンド: pipenv run python {dst_script_path} {params}")
+        try:
+            process = subprocess.Popen("pipenv run python " + dst_script_path + " " + params, shell=True)
+        except Exception as e:
+            print("Error: ", e)
+            return
 
     def on_resize(self, event):
         cur_width = self.master.winfo_width()
