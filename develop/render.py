@@ -1,19 +1,66 @@
 import os
-
+import argparse
+import tkinter as tk
+from tkinter import filedialog, messagebox
+from PIL import Image, ImageTk
+import cv2
 from step1_calculate_pixel_viewport.code import calculate_pixel_viewport
 from step2_batch_eye_rendering.code      import scene_renderer
 from step3_apply_hexigonal_filter.code   import apply_hexigonal_filter
 
-def show_result_image(setting, path):
-    # ここに画像を表示する処理を書く
-    
-    # if settingにclipingがTrueならクリッピング
-    # クリッピングのサイズは、x = x - 出力画像横幅 / 個眼個数 * 0.5, yは変えない
+def show_result_image(path,settings):
+    class ImageApp:
+        def __init__(self, master, image):
+            self.master = master
+            self.master.title("Image Viewer")
 
-    # showする
+            # 画像のサイズを取得
+            self.original_image = image
+            self.height, self.width, _ = self.original_image.shape
+
+            # アスペクト比を保ちながら横幅を800にリサイズ
+            self.new_width = 800
+            self.new_height = int((self.new_width / self.width) * self.height)
+            self.resized_image = cv2.resize(self.original_image, (self.new_width, self.new_height))
+
+            # OpenCVの画像をPILの画像に変換
+            self.image_pil = Image.fromarray(cv2.cvtColor(self.resized_image, cv2.COLOR_BGR2RGB))
+            self.image_tk = ImageTk.PhotoImage(self.image_pil)
+
+            # キャンバスを作成して画像を表示
+            self.canvas = tk.Canvas(self.master, width=self.new_width, height=self.new_height)
+            self.canvas.pack()
+            self.imageItemID = self.canvas.create_image(0, 0, anchor=tk.NW, image=self.image_tk)
+
+            # ボタンを作成して配置
+            self.save_button = tk.Button(self.master, text="画像を保存", command=self.save_image)
+            self.save_button.pack(side=tk.BOTTOM)
+        def update_canvas_from_pil(self):
+            self.image_pil = self.image_pil.resize((self.new_width, self.new_height))
+            self.image_tk = ImageTk.PhotoImage(self.image_pil)
+            self.canvas.itemconfig(self.imageItemID, image=self.image_tk)
+
+        def save_image(self):
+            # ファイルダイアログを開いて保存先を選択
+            save_path = filedialog.asksaveasfilename(
+                defaultextension=".png", 
+                filetypes=[("PNG files", "*.png"), ("JPEG files", "*.jpg"), ("BMP files", "*.bmp")],
+                initialdir=os.getcwd()
+            )
+            if save_path:
+                cv2.imwrite(save_path, image)
+                # 日本語に直す
+                # messagebox.showinfo("Image Saved", f"Image saved to {save_path}")
+                messagebox.showinfo("save_image", f"画像を{save_path}に保存しました")
+    image = cv2.imread(path)
+    # Tkinterアプリケーションを作成して実行
+    root = tk.Tk()
+    app = ImageApp(root, image)
+    root.mainloop()
     return
 
 def rander_frame(settings):
+    initial_debug_mode = settings['debug_mode']
     basedir = os.path.dirname(os.path.abspath(__file__))
     color_image_dir = os.path.join(basedir,"output","temp_color_image", "radius"+str(settings["ommatidium_radius"]),"frame"+str(settings["frame"]))
     depth_image_dir = os.path.join(basedir,"output","temp_depth_image", "radius"+str(settings["ommatidium_radius"]),"frame"+str(settings["frame"]))
@@ -40,9 +87,21 @@ def rander_frame(settings):
     for file in os.listdir(output_dir):
         if file.endswith(".png"):
             os.rename(os.path.join(output_dir, file), os.path.join(radius_output_dir, file))
-    
-    result_image_path = "" # ここに結果の画像のパスを入れる
-    show_result_image(result_image_path)
+
+    result_image_path = None
+    for file in os.listdir(radius_output_dir):
+        if file.endswith(".png"):
+            if initial_debug_mode is True:
+                if file.startswith("output_debug"):
+                    result_image_path = os.path.join(radius_output_dir, file)
+                    break
+            else:
+                if file.startswith("output_"+settings["filter"]):
+                    result_image_path = os.path.join(radius_output_dir, file)
+                    break
+    if not result_image_path:
+        raise Exception("Result image not found.")
+    show_result_image(result_image_path,settings)
 
 def render_animation(settings):
     # total_frame = 600
@@ -81,4 +140,40 @@ settings = {
     "frame"                : 275,
     "clipping"             : True, # True/False
 }
+# argparse
+parser = argparse.ArgumentParser()
+parser.add_argument("--scene_path", type=str, default=settings["scene_path"])
+parser.add_argument("--output_width", type=int, default=settings["output_width"])
+parser.add_argument("--output_height", type=int, default=settings["output_height"])
+parser.add_argument("--image_format", type=str, default=settings["image_format"])
+parser.add_argument("--interommatidial_angle", type=float, default=settings["interommatidial_angle"])
+parser.add_argument("--ommatidium_angle", type=float, default=settings["ommatidium_angle"])
+parser.add_argument("--ommatidium_count", type=int, default=settings["ommatidium_count"])
+parser.add_argument("--ommatidium_radius", type=float, default=settings["ommatidium_radius"])
+parser.add_argument("--theta", type=float, default=settings["theta"])
+parser.add_argument("--phi", type=float, default=settings["phi"])
+parser.add_argument("--filter", type=str, default=settings["filter"])
+parser.add_argument("--view_mode", type=str, default=settings["view_mode"])
+parser.add_argument("--debug_mode", action="store_true")
+parser.add_argument("--blur_size", type=int, default=settings["blur_size"])
+parser.add_argument("--frame", type=int, default=settings["frame"])
+parser.add_argument("--clipping", action="store_true")
+args = parser.parse_args()
+settings["scene_path"]           = args.scene_path
+settings["output_width"]         = args.output_width
+settings["output_height"]        = args.output_height
+settings["image_format"]         = args.image_format
+settings["interommatidial_angle"]= args.interommatidial_angle
+settings["ommatidium_angle"]     = args.ommatidium_angle
+settings["ommatidium_count"]     = args.ommatidium_count
+settings["ommatidium_radius"]    = args.ommatidium_radius
+settings["theta"]                = args.theta
+settings["phi"]                  = args.phi
+settings["filter"]               = args.filter
+settings["view_mode"]            = args.view_mode
+settings["debug_mode"]           = args.debug_mode
+settings["blur_size"]            = args.blur_size
+settings["frame"]                = args.frame
+settings["clipping"]             = args.clipping
+print (settings)
 render_animation(settings)
