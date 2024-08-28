@@ -207,6 +207,10 @@ class UIViewer:
         save_view_image_button.grid(row=row_idx, column=0, columnspan=3, sticky=tk.N+tk.S+tk.E+tk.W)
         row_idx = row_idx + 1
 
+        load_settings_button = tk.Button(self.ui_frame, text="設定ファイル読み込み(.toml)", command=self.on_load_settings_click)
+        load_settings_button.grid(row=row_idx, column=0, columnspan=3, sticky=tk.N+tk.S+tk.E+tk.W)
+        row_idx = row_idx + 1
+
         save_settings_button = tk.Button(self.ui_frame, text="設定ファイル保存(.toml)", command=self.on_save_settings_click)
         save_settings_button.grid(row=row_idx, column=0, columnspan=3, sticky=tk.N+tk.S+tk.E+tk.W)
         row_idx = row_idx + 1
@@ -345,6 +349,9 @@ class UIViewer:
     def on_save_settings_click(self):
         self.save_settings()
 
+    def on_load_settings_click(self):
+        self.load_settings()
+
     def on_run_ommatidium_click(self):
         cur_script_path = os.path.abspath(__file__)
         dst_script_path = os.path.normpath(os.path.join(os.path.dirname(cur_script_path), "..\\..\\..\\develop\\render.py"))
@@ -453,6 +460,22 @@ class UIViewer:
         with open(file_path, 'wb') as f:
             tomli_w.dump(self.settings, f)
             print("設定ファイルを保存しました: ", file_path.split('/')[-1])
+
+    def load_settings(self):
+        # scriptのworking directoryを取得
+        working_directory = os.getcwd()
+        file_path = filedialog.askopenfilename(
+            filetypes=[("TOML files", "*.toml"), ("All files", "*.*")],
+            initialdir=working_directory
+        )
+        if not file_path:
+            print("読み込みがキャンセルされました。")
+            return
+        with open(file_path, 'rb') as f:
+            self.settings = tomllib.load(f)
+            print("設定ファイルを読み込みました: ", file_path.split('/')[-1])
+            self.update_view()
+            self.update_title()
 
     def update_view(self):
         (tmp_panorama,tmp_view_image) = update_view_process(self.settings['frame'], self.image_files, self.depth_files, self.settings, False,False,True)
