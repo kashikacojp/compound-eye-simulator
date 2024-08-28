@@ -288,6 +288,14 @@ class SceneRenderer:
         
         print(f"{len(cameras_to_remove)} cameras removed.")      
 
+    def rotate_base_camera(self, camera_rotation, theta, phi):
+
+        new_camera_rotation = camera_rotation.copy()
+
+        print("TODO: theta, phiで回転")
+
+        return new_camera_rotation
+
     def render_frame_image(self,base_filename, base_camera, frame_index, field_of_view, radius):
         # 
         phi = self.input_settings['phi']
@@ -298,6 +306,12 @@ class SceneRenderer:
         camera_location = base_camera.location
         # ベースカメラの姿勢を取得
         camera_rotation = base_camera.rotation_euler
+
+        # ベースカメラをtheta/phiで追加回転
+        camera_rotation = self.rotate_base_camera(camera_rotation, theta, phi) # theta, phiはsettingの値
+
+
+
         self.CheckAndRemoveCamera() # ベース以外の既存カメラを削除
         cameras = []
         for idx, center in enumerate(self.input_settings['centers']): # python においてenumerate()を使用することで、0から始まるindexと要素を同時に取得できる

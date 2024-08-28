@@ -4,9 +4,14 @@ from step1_calculate_pixel_viewport.code import calculate_pixel_viewport
 from step2_batch_eye_rendering.code      import scene_renderer
 from step3_apply_hexigonal_filter.code   import apply_hexigonal_filter
 
-def show_result_image(path):
+def show_result_image(setting, path):
     # ここに画像を表示する処理を書く
     
+    # if settingにclipingがTrueならクリッピング
+    # クリッピングのサイズは、x = x - 出力画像横幅 / 個眼個数 * 0.5, yは変えない
+
+    # showする
+
 def rander_frame(settings):
     basedir = os.path.dirname(os.path.abspath(__file__))
     color_image_dir = os.path.join(basedir,"output","temp_color_image", "radius"+str(settings["ommatidium_radius"]),"frame"+str(settings["frame"]))
@@ -72,6 +77,7 @@ settings = {
     "view_mode"            : "color",
     "debug_mode"           : True,
     "blur_size"            : 90,
-    "frame"                : 275
+    "frame"                : 275,
+    "clipping"             : True, # True/False
 }
 render_animation(settings)
