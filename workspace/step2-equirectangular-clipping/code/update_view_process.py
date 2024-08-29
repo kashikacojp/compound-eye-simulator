@@ -8,11 +8,16 @@ import OpenEXR
 import array
 import Imath
 def load_exr_depth(filename):
+    print ('load_exr_depth: {}'.format(filename))
     file = OpenEXR.InputFile(filename)
     dw = file.header()['dataWindow']
     size = (dw.max.x - dw.min.x + 1, dw.max.y - dw.min.y + 1)
-
-    depth_str = file.channel('V', Imath.PixelType(Imath.PixelType.FLOAT))
+    print ('load_exr_depth: size = {}'.format(size))
+    # file がRチャンネルを持っていることを確認
+    if 'R' in file.header()['channels']:
+        depth_str = file.channel('R', Imath.PixelType(Imath.PixelType.FLOAT))
+    if 'V' in file.header()['channels']:
+        depth_str = file.channel('V', Imath.PixelType(Imath.PixelType.FLOAT))
     depth_array = array.array('f', depth_str)
     depth_image = np.array(depth_array).reshape(size[1], size[0])
 
