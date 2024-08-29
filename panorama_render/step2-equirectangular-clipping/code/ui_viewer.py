@@ -296,7 +296,7 @@ class UIViewer:
         new_frame = int(self.ui_input_frame.get())
         if new_frame < 0 or new_frame >= len(self.image_files):
             new_frame = 0
-            self.ui_input_frame.set(new_frame)
+            self.ui_input_frame.set(0)
         
         self.settings['frame'] = new_frame
         self.update_view()
@@ -376,7 +376,7 @@ class UIViewer:
 
     def on_run_ommatidium_click(self):
         cur_script_path = os.path.abspath(__file__)
-        dst_script_path = os.path.normpath(os.path.join(os.path.dirname(cur_script_path), "..\\..\\..\\develop\\render.py"))
+        dst_script_path = os.path.normpath(os.path.join(os.path.dirname(cur_script_path), "..\\..\\..\\per_eye_render\\render.bat"))
         params = ""
         if 'scene_path' in self.settings:
             params = params + f" --scene_path {self.settings['scene_path']}"
@@ -414,10 +414,11 @@ class UIViewer:
             params = params + " --clipping"
         print (f"実行コマンド: pipenv run python {dst_script_path} {params}")
         try:
-            process = subprocess.Popen("pipenv run python " + dst_script_path + " " + params, shell=True)
+            process = subprocess.Popen( dst_script_path + " " + params, shell=True)
         except Exception as e:
             print("Error: ", e)
             return
+
 
     def on_resize(self, event):
         cur_width = self.master.winfo_width()
