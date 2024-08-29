@@ -128,27 +128,9 @@ def render_animation(settings):
     #     rander_frame(settings)
     rander_frame(settings)
 
-# setting
-settings = {
-    "scene_path"           : "D:/Users/shums/kasika/20240703/flower_middle_for_debug.blend", 
-    "output_width"         : 1920,
-    "output_height"        : 1080,
-    "image_format"         : "../step1-panorama-rendering/output_color/*.png",
-    "interommatidial_angle": 1.5,
-    "ommatidium_angle"     : 1.5,
-    "ommatidium_count"     : 25,
-    "ommatidium_radius"    : 0.0,
-    "theta"                : 0,
-    "phi"                  : 0,
-    "filter"               : "hexagonal_depth_gaussian",
-    "view_mode"            : "color",
-    "debug_mode"           : True,
-    "blur_size"            : 90,
-    "frame"                : 275,
-    "clipping"             : True, # True/False
-}
 # argparse
 parser = argparse.ArgumentParser()
+parser.add_argument("--setting", type=str, default="")
 parser.add_argument("--scene_path", type=str, default=settings["scene_path"])
 parser.add_argument("--output_width", type=int, default=settings["output_width"])
 parser.add_argument("--output_height", type=int, default=settings["output_height"])
@@ -166,6 +148,13 @@ parser.add_argument("--blur_size", type=int, default=settings["blur_size"])
 parser.add_argument("--frame", type=int, default=settings["frame"])
 parser.add_argument("--clipping", action="store_true")
 args = parser.parse_args()
+
+if args.setting != "":
+    with open(args.setting,mode='rb') as file:
+        if not file:
+            print(f"Error: Could not open file {args.setting}")
+            exit()
+        settings = tomllib.load(file)
 settings["scene_path"]           = args.scene_path
 settings["output_width"]         = args.output_width
 settings["output_height"]        = args.output_height
