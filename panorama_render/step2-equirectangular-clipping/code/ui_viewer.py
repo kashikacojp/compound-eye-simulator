@@ -18,8 +18,8 @@ from update_view_process import update_view_process
 class UIViewer:
     def __init__(self, master):
         parser = argparse.ArgumentParser(description='360 Viewer for compound eye simulator')
-        prompt = "TOML settings file (e.g., 'settings/*.toml'): "
-        default = './settings/settings.toml'
+        prompt = "TOML settings file (e.g., '*.toml'): "
+        default = 'settings.toml'
         parser.add_argument('-s','--setting', type=str, default=default, help=f"{prompt} (default: {default}): ")
         args = parser.parse_args()
         with open(args.setting,mode='rb') as file:
@@ -29,8 +29,8 @@ class UIViewer:
             self.settings = tomllib.load(file)
         # デフォルト値の設定
         if not 'image_format' in self.settings:
-            print("Warning: 'image_format' not found in settings. Using default value '../step1-panorama-rendering/output_color/*.png'.")
-            self.settings['image_format'] = '../step1-panorama-rendering/output_color/*.png' 
+            print("Warning: 'image_format' not found in settings. Using default value 'output_color/*.png'.")
+            self.settings['image_format'] = 'output_color/*.png' 
         if not 'output_width' in self.settings: 
             print("Warning: 'output_width' not found in settings. Using default value 1920.")
             self.settings['output_width'] = 1920
