@@ -1,1 +1,0 @@
-pipenv run python code\viewer.py -f .\settings/settings.toml
