@@ -67,7 +67,7 @@ def show_result_image(path,settings):
     root.mainloop()
     return
 
-def rander_frame(settings, no_window=False):
+def render_frame(settings, no_window=False):
     initial_debug_mode = settings['debug_mode']
     basedir = os.path.dirname(os.path.abspath(__file__))
     color_image_dir = os.path.join(basedir,"output","temp_color_image", "radius"+str(settings["ommatidium_radius"]),"frame"+str(settings["frame"]))
@@ -110,7 +110,7 @@ def rander_frame(settings, no_window=False):
 def render_animation(settings, begin, end):
     for frame in range(begin, end + 1) :
         settings["frame"] = frame
-        rander_frame(settings, no_window=True)
+        render_frame(settings, no_window=True)
 
 # argparse
 parser = argparse.ArgumentParser()
