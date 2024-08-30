@@ -8,6 +8,7 @@ import glob
 import argparse
 import tomllib
 import math
+from . import util
 # image_filesを返す関数
 # image_filesは以下の条件を満たす2次元配列
 def enumerate_image_files(image_format):
@@ -64,7 +65,7 @@ def process_frame(settings, color_image_files, depth_image_files, current_image_
         result_image = result_depth_image
     for center_x, center_y, hex_size, hex_points, mask in get_hexagon_data(output_width, output_height, ommatidium_count):        # 中心座標が画像の範囲内にあることを確認
         # debug_modeの場合のみ特殊な扱いが必要
-        color_image = cv2.imread( cur_color_image_files[hex_index])
+        color_image = util.imread( cur_color_image_files[hex_index])
         depth_image = load_exr_depth( cur_depth_image_files[hex_index])
         if 0 <= center_x < output_width and 0 <= center_y < output_height:
             if settings['debug_mode']:
@@ -118,9 +119,6 @@ def process_frame(settings, color_image_files, depth_image_files, current_image_
     
     # 結果を保存
     return result_image
-
-# def debug_filter(image, ommatidium_count, filter_size):
-#     return image
     
 def run(settings,input_image_dir, output_image_dir,frame_index):
     # ソースディレクトリを取得
@@ -149,7 +147,7 @@ def run(settings,input_image_dir, output_image_dir,frame_index):
     else:
         filter_name = settings['filter']
     output_image_filename = os.path.join(output_image_dir, f"output_{filter_name}_{current_image_index:04d}.png")
-    cv2.imwrite(output_image_filename, output_image)
+    util.imwrite(output_image_filename, output_image)
     print("Done.")
 
 if __name__ == "__main__":

@@ -6,7 +6,7 @@ from PIL import Image, ImageTk
 import cv2
 from step1_calculate_pixel_viewport.code import calculate_pixel_viewport
 from step2_batch_eye_rendering.code      import scene_renderer
-from step3_apply_hexigonal_filter.code   import apply_hexigonal_filter
+from step3_apply_hexigonal_filter.code   import apply_hexigonal_filter, util
 
 def show_result_image(path,settings):
     class ImageApp:
@@ -48,11 +48,11 @@ def show_result_image(path,settings):
                 initialdir=os.getcwd()
             )
             if save_path:
-                cv2.imwrite(save_path, image)
+                util.imwrite(save_path, image)
                 # 日本語に直す
                 # messagebox.showinfo("Image Saved", f"Image saved to {save_path}")
                 messagebox.showinfo("save_image", f"画像を{save_path}に保存しました")
-    image = cv2.imread(path)
+    image = util.imread(path)
     if settings["clipping"]:           
         output_width = settings["output_width"]
         ommatidium_count = settings["ommatidium_count"]
@@ -72,8 +72,6 @@ def rander_frame(settings):
     color_image_dir = os.path.join(basedir,"output","temp_color_image", "radius"+str(settings["ommatidium_radius"]),"frame"+str(settings["frame"]))
     depth_image_dir = os.path.join(basedir,"output","temp_depth_image", "radius"+str(settings["ommatidium_radius"]),"frame"+str(settings["frame"]))
     output_dir = os.path.join(basedir,"output")
-    print(color_image_dir)
-    print(output_dir)
     if not os.path.exists(color_image_dir):
         os.makedirs(color_image_dir)
     if not os.path.exists(depth_image_dir):
@@ -93,7 +91,7 @@ def rander_frame(settings):
     os.makedirs(radius_output_dir, exist_ok=True)
     for file in os.listdir(output_dir):
         if file.endswith(".png"):
-            os.rename(os.path.join(output_dir, file), os.path.join(radius_output_dir, file))
+            os.replace(os.path.join(output_dir, file), os.path.join(radius_output_dir, file))
 
     result_image_path = None
     for file in os.listdir(radius_output_dir):
@@ -131,21 +129,21 @@ def render_animation(settings):
 # argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("--setting", type=str, default="")
-parser.add_argument("--scene_path", type=str, default=settings["scene_path"])
-parser.add_argument("--output_width", type=int, default=settings["output_width"])
-parser.add_argument("--output_height", type=int, default=settings["output_height"])
-parser.add_argument("--image_format", type=str, default=settings["image_format"])
-parser.add_argument("--interommatidial_angle", type=float, default=settings["interommatidial_angle"])
-parser.add_argument("--ommatidium_angle", type=float, default=settings["ommatidium_angle"])
-parser.add_argument("--ommatidium_count", type=int, default=settings["ommatidium_count"])
-parser.add_argument("--ommatidium_radius", type=float, default=settings["ommatidium_radius"])
-parser.add_argument("--theta", type=float, default=settings["theta"])
-parser.add_argument("--phi", type=float, default=settings["phi"])
-parser.add_argument("--filter", type=str, default=settings["filter"])
-parser.add_argument("--view_mode", type=str, default=settings["view_mode"])
+parser.add_argument("--scene_path", type=str, default="")
+parser.add_argument("--output_width", type=int, default=1000)
+parser.add_argument("--output_height", type=int, default=1000)
+parser.add_argument("--image_format", type=str, default="")
+parser.add_argument("--interommatidial_angle", type=float, default=1.0)
+parser.add_argument("--ommatidium_angle", type=float, default=1.0)
+parser.add_argument("--ommatidium_count", type=int, default=10)
+parser.add_argument("--ommatidium_radius", type=float, default=0.0)
+parser.add_argument("--theta", type=float, default=0.0)
+parser.add_argument("--phi", type=float, default=0.0)
+parser.add_argument("--filter", type=str, default="hexagonal_depth_gaussian")
+parser.add_argument("--view_mode", type=str, default="color")
 parser.add_argument("--debug_mode", action="store_true")
-parser.add_argument("--blur_size", type=int, default=settings["blur_size"])
-parser.add_argument("--frame", type=int, default=settings["frame"])
+parser.add_argument("--blur_size", type=int, default=60)
+parser.add_argument("--frame", type=int, default=0)
 parser.add_argument("--clipping", action="store_true")
 args = parser.parse_args()
 
@@ -155,6 +153,7 @@ if args.setting != "":
             print(f"Error: Could not open file {args.setting}")
             exit()
         settings = tomllib.load(file)
+settings = {}
 settings["scene_path"]           = args.scene_path
 settings["output_width"]         = args.output_width
 settings["output_height"]        = args.output_height
