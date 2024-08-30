@@ -1,6 +1,7 @@
 import os
 import argparse
 import tkinter as tk
+import tomllib
 from tkinter import filedialog, messagebox
 from PIL import Image, ImageTk
 import cv2
@@ -66,7 +67,7 @@ def show_result_image(path,settings):
     root.mainloop()
     return
 
-def rander_frame(settings):
+def rander_frame(settings, no_window=False):
     initial_debug_mode = settings['debug_mode']
     basedir = os.path.dirname(os.path.abspath(__file__))
     color_image_dir = os.path.join(basedir,"output","temp_color_image", "radius"+str(settings["ommatidium_radius"]),"frame"+str(settings["frame"]))
@@ -93,38 +94,23 @@ def rander_frame(settings):
         if file.endswith(".png"):
             os.replace(os.path.join(output_dir, file), os.path.join(radius_output_dir, file))
 
+    if no_window:
+        return
+
     result_image_path = None
     for file in os.listdir(radius_output_dir):
         if file.endswith(".png"):
-            if initial_debug_mode is True:
-                if file.startswith("output_debug"):
-                    result_image_path = os.path.join(radius_output_dir, file)
-                    break
-            else:
-                if file.startswith("output_"+settings["filter"]):
-                    result_image_path = os.path.join(radius_output_dir, file)
-                    break
+            if file.startswith("output_"+settings["filter"]):
+                result_image_path = os.path.join(radius_output_dir, file)
+                break
     if not result_image_path:
         raise Exception("Result image not found.")
     show_result_image(result_image_path,settings)
 
-def render_animation(settings):
-    # total_frame = 600
-    # frames            = range(1, total_frame + 1, 3) 
-    # for frame in frames:
-    #     settings["frame"] = frame
-    #     rander_frame(settings)
-    
-    # frames            = range(2, total_frame + 1, 3) 
-    # for frame in frames:
-    #     settings["frame"] = frame
-    #     rander_frame(settings)
-
-    # frames            = range(3, total_frame + 1, 3) 
-    # for frame in frames:
-    #     settings["frame"] = frame
-    #     rander_frame(settings)
-    rander_frame(settings)
+def render_animation(settings, begin, end):
+    for frame in range(begin, end + 1) :
+        settings["frame"] = frame
+        rander_frame(settings, no_window=True)
 
 # argparse
 parser = argparse.ArgumentParser()
@@ -145,6 +131,8 @@ parser.add_argument("--debug_mode", action="store_true")
 parser.add_argument("--blur_size", type=int, default=60)
 parser.add_argument("--frame", type=int, default=0)
 parser.add_argument("--clipping", action="store_true")
+parser.add_argument("--animation_start", type=int, default=-1)
+parser.add_argument("--animation_end", type=int, default=-1)
 args = parser.parse_args()
 
 if args.setting != "":
@@ -153,22 +141,27 @@ if args.setting != "":
             print(f"Error: Could not open file {args.setting}")
             exit()
         settings = tomllib.load(file)
-settings = {}
-settings["scene_path"]           = args.scene_path
-settings["output_width"]         = args.output_width
-settings["output_height"]        = args.output_height
-settings["image_format"]         = args.image_format
-settings["interommatidial_angle"]= args.interommatidial_angle
-settings["ommatidium_angle"]     = args.ommatidium_angle
-settings["ommatidium_count"]     = args.ommatidium_count
-settings["ommatidium_radius"]    = args.ommatidium_radius
-settings["theta"]                = args.theta
-settings["phi"]                  = args.phi
-settings["filter"]               = args.filter
-settings["view_mode"]            = args.view_mode
-settings["debug_mode"]           = args.debug_mode
-settings["blur_size"]            = args.blur_size
-settings["frame"]                = args.frame
-settings["clipping"]             = args.clipping
+else:
+    settings = {}
+    settings["scene_path"]           = args.scene_path
+    settings["output_width"]         = args.output_width
+    settings["output_height"]        = args.output_height
+    settings["image_format"]         = args.image_format
+    settings["interommatidial_angle"]= args.interommatidial_angle
+    settings["ommatidium_angle"]     = args.ommatidium_angle
+    settings["ommatidium_count"]     = args.ommatidium_count
+    settings["ommatidium_radius"]    = args.ommatidium_radius
+    settings["theta"]                = args.theta
+    settings["phi"]                  = args.phi
+    settings["filter"]               = args.filter
+    settings["view_mode"]            = args.view_mode
+    settings["debug_mode"]           = args.debug_mode
+    settings["blur_size"]            = args.blur_size
+    settings["frame"]                = args.frame
+    settings["clipping"]             = args.clipping
 print (settings)
-render_animation(settings)
+
+if args.animation_start > 0 and args.animation_end > 0:
+    render_animation(settings, args.animation_start, args.animation_end)
+else:
+    render_frame(settings)
