@@ -9,9 +9,16 @@
 2. pythonのScriptsフォルダ
 例）C:\Users\[ユーザ名]\AppData\Local\Programs\Python\Python311\Scripts
 ```
-3. 本フォルダ内で以下コマンドを実行
+3. コマンドプロンプトを開き、本フォルダ内で以下コマンドを実行
 ```
-python -m pip install -r requirements.txt
+$ python -m pip install -r requirements.txt
+```
+4. 本フォルダ内で`python`コマンドを実行し、以下のような表示となることを確認
+```
+$ python
+Python 3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)] on win32
+Type "help", "copyright", "credits" or "license" for more information.
+>>>
 ```
 
 # データ準備
@@ -20,7 +27,11 @@ python -m pip install -r requirements.txt
 
 ## 設定ファイルを自分の環境用に書き換え
 1. 同梱の**settings.toml** を開く
-2. `scene_path =` に参照するBlenderファイルへのパスを書く。 ※区切り文字は「\」ではなく、「/」を使用。
+2. `scene_path =` に参照するBlenderファイルへのパスを書く。 ※区切り文字は「\」ではなく、「/」を使用。下記は入力例
+```
+# 個眼毎描画用
+scene_path = "E:\\dev\\ダウンロードフォルダ\\blender_scene\\flower_middle.blend" # パスの区切りは / または \\
+```
 
 ## パノラマ画像を配置
 1. レンダリング済みのパノラマ画像を用意する（別途共有されている場合は、ダウンロード）
