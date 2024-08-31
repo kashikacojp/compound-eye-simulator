@@ -1,24 +1,24 @@
 # 環境設定
 ## Pythonのインストール
-1. Python 3.11.9をユーザ向けにインストール
-- リンク：[https://www.python.org/ftp/python/3.11.9/python-3.11.9-amd64.exe](https://www.python.org/ftp/python/3.11.9/python-3.11.9-amd64.exe)
-2. 環境変数**PATH**に以下の二つを追加
+1. Pythonのインストール：Python 3.11.9をユーザ向けにインストール
+- リンク（インストール用exeファイルをダウンロード）：[https://www.python.org/ftp/python/3.11.9/python-3.11.9-amd64.exe](https://www.python.org/ftp/python/3.11.9/python-3.11.9-amd64.exe)
+2. 環境変数の設定：環境変数**PATH**に以下の二つを追加
 ```
 1. python.exeインストールフォルダ
 例）C:\Users\[ユーザ名]\AppData\Local\Programs\Python\Python311
 2. pythonのScriptsフォルダ
 例）C:\Users\[ユーザ名]\AppData\Local\Programs\Python\Python311\Scripts
 ```
-3. コマンドプロンプトを開き、本フォルダ内で以下コマンドを実行
-```
-$ python -m pip install -r requirements.txt
-```
-4. 本フォルダ内で`python`コマンドを実行し、以下のような表示となることを確認
+3. pythonの動作確認：コマンドプロンプトを開き、`python`コマンドを実行し、以下のような表示となることを確認
 ```
 $ python
 Python 3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)] on win32
 Type "help", "copyright", "credits" or "license" for more information.
 >>>
+```
+4. 必要なパッケージのインストール：以下コマンドを実行
+```
+$ python -m pip install -r requirements.txt
 ```
 
 # データ準備
