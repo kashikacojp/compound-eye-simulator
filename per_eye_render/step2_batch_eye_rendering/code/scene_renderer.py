@@ -7,30 +7,20 @@ import re
 from mathutils import Vector, Quaternion, Euler
 class SceneRenderer:
     scene_path            = None
-    background_image_path = None
     output_depth_format   = None
     output_path           = None
     output_color_path     = None
     output_depth_path     = None
     input_settings        = None
     target_frame_index    = None
-    def __init__(self, input_settings = None, scene_path = None,background_image_path= None,output_path= None,output_color_path= None,output_depth_path = None,output_depth_format = 'PNG', target_frame_index = None):
+    def __init__(self, input_settings = None, scene_path = None,output_path= None,output_color_path= None,output_depth_path = None,output_depth_format = 'PNG', target_frame_index = None):
         if scene_path is not None:
             self.load_scene(scene_path)
         else:
             print ("scene_path is None")
             scene_path = bpy.data.filepath
             self.scene_path = scene_path
-        if background_image_path is None:
-            current_file_path = bpy.data.filepath
-            current_parent_dir = os.path.dirname(current_file_path)
-            # hdrファイルを探す
-            for file in os.listdir(current_parent_dir):
-                if file.endswith(".hdr"):
-                    background_image_path = current_parent_dir + '/' + file
-                    break
         self.input_settings = input_settings
-        self.background_image_path = abspath(background_image_path)
         if output_path is None:
             current_file_path = bpy.data.filepath
             current_parent_dir = os.path.dirname(current_file_path)
@@ -62,7 +52,6 @@ class SceneRenderer:
     def setup_rendering_common(self, width, height, samples):
         bpy.context.scene.render.engine                     = 'CYCLES'
         bpy.context.scene.render.image_settings.file_format = 'PNG'
-        # py.context.scene.render.image_settings.use_preview = False
         bpy.context.scene.render.filepath                   = self.output_path + '/image.png'
         bpy.context.scene.render.resolution_x               = width
         bpy.context.scene.render.resolution_y               = height
@@ -83,26 +72,13 @@ class SceneRenderer:
                 break
             if device.type == 'CUDA':
                 selected_device_type = device.type
-        
         if selected_device_type is None:
             selected_device_type = cycles_preferences.devices[0]
-        # 環境マップをロード
-        image = bpy.data.images.load(self.background_image_path)
         if selected_device_type is None:
             selected_device_type = cycles_preferences.devices[0].type
         # # デバイスタイプをGPUに設定
         cycles_preferences.compute_device_type = selected_device_type
         print ("selected device.name is "+selected_device_type)
-        # # シーンの設定
-        scene = bpy.context.scene
-        world = scene.world
-        node_background = world.node_tree.nodes['Background']
-        # Add Environment Texture node
-        node_environment = world.node_tree.nodes.new('ShaderNodeTexEnvironment')
-        node_environment.image = image
-        # Link all nodes
-        links = world.node_tree.links
-        link  = links.new(node_environment.outputs["Color"], node_background.inputs["Color"])
         
     def setup_rendering_frame (self, base_file_name_per_frame):
         scene_node_tree = bpy.context.scene.node_tree
@@ -159,37 +135,6 @@ class SceneRenderer:
 
         scene_node_tree.links.new(output_color,node_save_color.inputs[0])
         scene_node_tree.links.new(output_depth,node_save_depth.inputs[0])
-
-    # 単体機能をテストしていた時に実装した関数。上記のノード設定を使用しているため現在は使用していない。
-    # def SetNode(self, scene):
-    #     print('MultiViewRendering')
-
-    #     # デプスパスを追加
-    #     scene.view_layers[0].use_pass_z = True
-        
-    #     # コンポジッターノードを設定してデプスを出力
-    #     scene.use_nodes = True
-    #     tree = scene.node_tree
-        
-    #     # 既存のノードをクリア
-    #     tree.nodes.clear()
-        
-    #     # レンダーレイヤーノードを追加
-    #     render_layers = tree.nodes.new(type='CompositorNodeRLayers')
-        
-    #     # ファイル出力ノードを追加 (カラー用)
-    #     file_output_color = tree.nodes.new(type='CompositorNodeOutputFile')
-    #     file_output_color.format.file_format = 'PNG'
-    #     file_output_color.base_path = "//render/color/"
-        
-    #     # ファイル出力ノードを追加 (デプス用)
-    #     file_output_depth = tree.nodes.new(type='CompositorNodeOutputFile')
-    #     file_output_depth.format.file_format = 'OPEN_EXR'
-    #     file_output_depth.base_path = "//render/depth/"
-        
-    #     # ノードを接続
-    #     tree.links.new(render_layers.outputs['Image'], file_output_color.inputs[0])
-    #     tree.links.new(render_layers.outputs['Depth'], file_output_depth.inputs[0])
 
     def rotate_camera(self, camera, base_location,base_radius, base_rotation,phi, theta):
         # base_locationは, カメラの位置を球面上に配置するための中心座標
@@ -419,18 +364,3 @@ def run(scene_path,hex_pos_settings, color_image_dir,depth_image_dir,frame_index
     renderer = SceneRenderer(scene_path=scene_path,output_depth_format='OPEN_EXR', input_settings=hex_pos_settings,output_color_path=color_image_dir,output_depth_path=depth_image_dir, target_frame_index=frame_index)
     renderer.print()
     renderer.run()    
-
-# テスト用。render.pyを称した場合動作しないはずなので、コメントアウト。エラーが出るようなら意図しないパスで処理が動いている。
-# if __name__ == "__main__":
-#     input_settings = {
-#     'centers': [(-6.0, -3.375), (-4.5, -3.375), (-3.0, -3.375), (-1.5, -3.375), (0.0, -3.375), (1.5, -3.375), (3.0, -3.375), (4.5, -3.375), (-5.25, -2.08125), (-3.75, -2.08125), (-2.25, -2.08125), (-0.75, -2.08125), (0.75, -2.08125), (2.25, -2.08125), (3.75, -2.08125), (5.25, -2.08125), (-6.0, -0.78125), (-4.5, -0.78125), (-3.0, -0.78125), (-1.5, -0.78125), (0.0, -0.78125), (1.5, -0.78125), (3.0, -0.78125), (4.5, -0.78125), (-5.25, 0.51875), (-3.75, 0.51875), (-2.25, 0.51875), (-0.75, 0.51875), (0.75, 0.51875), (2.25, 0.51875), (3.75, 0.51875), (5.25, 0.51875), (-6.0, 1.81875), (-4.5, 1.81875), (-3.0, 1.81875), (-1.5, 1.81875), (0.0, 1.81875), (1.5, 1.81875), (3.0, 1.81875), (4.5, 1.81875), (-5.25, 3.11875), (-3.75, 3.11875), (-2.25, 3.11875), (-0.75, 3.11875), (0.75, 3.11875), (2.25, 3.11875), (3.75, 3.11875), (5.25, 3.11875)],      
-#     'theta': 0,
-#     'phi': 0,
-#     'ommatidium_angle': 1.5,
-#     'ommatidium_radius' : 1.5,
-# }
-
-#     renderer = SceneRenderer(output_depth_format='OPEN_EXR', input_settings=input_settings, target_frame_index=0)
-#     renderer.print()
-#     renderer.run()
-    
