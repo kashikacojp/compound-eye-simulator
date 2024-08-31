@@ -161,7 +161,7 @@ else:
     settings["clipping"]             = args.clipping
 print (settings)
 
-if args.animation_start > 0 and args.animation_end > 0:
+if args.animation_start >= 0 and args.animation_end >= 0:
     render_animation(settings, args.animation_start, args.animation_end)
 else:
     render_frame(settings)
