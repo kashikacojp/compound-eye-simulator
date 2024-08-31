@@ -1,8 +1,8 @@
-# パノラマビューア用
-image_format = "panorama_render/step1-panorama-rendering/output_color/*.png" # 入力画像のパス
-
 # 個眼毎描画用
 scene_path = "ここにBlenderファイルへのパスを入力\\flower_middle.blend" # パスの区切りは / または \\
+
+# パノラマビューア用
+image_format = "panorama_render/step1-panorama-rendering/output_color/*.png" # 入力画像のパス
 
 # 共通パラメタ
 output_width = 1920                 # 出力画像 width
