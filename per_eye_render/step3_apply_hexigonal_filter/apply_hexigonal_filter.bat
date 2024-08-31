@@ -1,1 +1,0 @@
-pipenv run python code\apply_hexigonal_filter.py -f ..\settings/settings.toml
